@@ -221,6 +221,8 @@ meta_table_data = [
     [Paragraph("<b>Internship Duration:</b>", table_header_style), Paragraph("17 August 2026 to 30 September 2026 (6 Weeks Virtual)", table_body_style)],
     [Paragraph("<b>Academic Background:</b>", table_header_style), Paragraph("TY B.Tech Computer Science & Engineering (AI & DS), Sanjivani University, Kopergaon", table_body_justified)],
     [Paragraph("<b>Benchmark Dataset:</b>", table_header_style), Paragraph("IBM Cognos Analytics Telco Customer Churn Benchmark (7,043 Records)", table_body_style)],
+    [Paragraph("<b>Live Cloud Deployment:</b>", table_header_style), Paragraph("<b>https://akshad-bharatcares-retention.streamlit.app/</b>", table_body_style)],
+    [Paragraph("<b>GitHub Repository:</b>", table_header_style), Paragraph("https://github.com/akshad1007/bharatcares-telco-churn-retention", table_body_style)],
     [Paragraph("<b>Implementation Framework:</b>", table_header_style), Paragraph("Python 3.10+, Streamlit, Scikit-Learn, Plotly, Pandas, NumPy, ReportLab", table_body_style)],
     [Paragraph("<b>Analytical Paradigm:</b>", table_header_style), Paragraph("Data &rarr; Information &rarr; Insight &rarr; Decision &rarr; Action", table_body_style)],
 ]

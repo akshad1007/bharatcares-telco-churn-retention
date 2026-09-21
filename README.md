@@ -9,6 +9,7 @@
 - **Academic Degree:** TY B.Tech Computer Science and Engineering (Artificial Intelligence & Data Science) [B.Tech CSE (AI & DS)]  
 - **Institution:** Sanjivani University, Kopergaon, Maharashtra  
 - **Official Offer Letter:** [`Akshad Viresh Makhana AICTE IBMSB Data Analytics Internship Offer Letter.pdf`](Akshad%20Viresh%20Makhana%20AICTE%20IBMSB%20Data%20Analytics%20Internship%20Offer%20Letter.pdf)  
+- **Live Deployed Cloud Platform:** [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://akshad-bharatcares-retention.streamlit.app/) 🔗 [https://akshad-bharatcares-retention.streamlit.app/](https://akshad-bharatcares-retention.streamlit.app/)  
 
 ---
 
