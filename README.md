@@ -19,6 +19,9 @@ This enterprise-grade data analytics and machine learning solution addresses hig
 
 $$\mathbf{Data} \longrightarrow \mathbf{Information} \longrightarrow \mathbf{Insight} \longrightarrow \mathbf{Decision} \longrightarrow \mathbf{Action}$$
 
+![Platform Executive Overview](screenshots/overview_kpis.png)
+*Figure: Live Executive Dashboard displaying Core Retention KPIs and Revenue Risk Scorecard*
+
 The platform integrates automated data preprocessing, multi-dimensional exploratory data analysis (EDA), executive KPI monitoring, supervised machine learning (Random Forest & Logistic Regression), a real-time What-If churn simulator, and an executive decision playbook with an automated ROI revenue recovery calculator.
 
 ---
@@ -120,6 +123,12 @@ Multi-dimensional analysis was performed to test empirical hypotheses:
 - **Contract Impact Analysis:** Month-to-month contracts demonstrated a **42.71% churn rate**, compared to **11.27%** for 1-year and **2.83%** for 2-year contracts.
 - **Service Stack Correlation:** Customers without `TechSupport` had a **41.6% churn rate**, compared to **15.2%** for customers with `TechSupport` (2.7× reduction in cancellation).
 - **Payment Method Analysis:** Electronic check customers exhibited an alarming **45.3% churn rate**, while automated ACH/Credit Card subscribers churned at only **15.9%**.
+ 
+![Customer Churn by Contract Term](screenshots/tenure_churn_distribution.png)
+*Figure: Full-Color Categorical Breakdown of Customer Attrition Rate by Contract Commitment Term*
+
+![Interactive Exploratory Data Analysis](screenshots/eda_charts.png)
+*Figure: Live Streamlit Bivariate Analytics across Tenure Cohorts and Addon Support Services*
 
 ---
 
@@ -185,15 +194,27 @@ The platform is organized into 5 intuitive analytical tabs matching the decision
 
 ### Tab 1: Executive KPIs & Overview (What is happening?)
 Features 5 top-level KPI metric cards, monthly recurring revenue loss indicators, churn breakdown donut charts, and contractual revenue exposure distributions.
-![Executive Overview](screenshots/overview_kpis.png)
+
+![Executive KPIs](screenshots/overview_kpis.png)
+*Figure: Top-Level Active Footprint, Churn Rate, and Monthly Revenue at Risk Scorecards*
+
+![Revenue Breakdown and Tenure Distribution](screenshots/overview_charts.png)
+*Figure: Monthly Revenue Exposure and Contract Distribution Analysis*
 
 ### Tab 2: Exploratory Data Analysis & Trends (What is the trend?)
 Interactive visualizations analyzing tenure curves, internet service tiers, and service ecosystem adoption.
-![EDA Charts](screenshots/eda_charts.png)
+
+![EDA Trends](screenshots/eda_charts.png)
+*Figure: Interactive Multi-Dimensional Life-Cycle Curves and Service Stack Adoption*
 
 ### Tab 3: Driver & Risk Analysis (Why is it happening?)
 Correlation heatmaps, feature impact rankings, enterprise risk matrices, and strategic opportunity cards.
-![Driver and Risk Analysis](screenshots/risk_cards.png)
+
+![Driver Correlation Analysis](screenshots/driver_top.png)
+*Figure: Correlation Heatmap and Key Driver Hierarchy*
+
+![Risk Matrices and Opportunity Cards](screenshots/risk_cards.png)
+*Figure: Diagnostic Risk Matrices and Strategic Opportunity Scorecards*
 
 ### Tab 4: Predictive Machine Learning & What-If Simulator
 Allows retention agents to input subscriber attributes (tenure, contract type, monthly charges, add-on services) to receive an instantaneous churn probability score and prescriptive action guidance.
