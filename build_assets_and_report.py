@@ -17,10 +17,11 @@ csv_path = os.path.join(BASE_DIR, "Telco-Customer-Churn.csv")
 
 # --------------------------------------------------------------------------------------------------
 # ReportLab Canvas & Styling
-# Strict Standards: 100% Times New Roman, Justified Text, B&W Academic Tables, Full-Color Original Screenshots
+# Tailored for: BharatCares - AICTE - IBM SkillsBuild Data Analytics with AI Internship 2026
+# Candidate: Akshad Viresh Makhana | Internship ID: IBMUEDA4101
 # --------------------------------------------------------------------------------------------------
 
-class AcademicNumberedCanvas(canvas.Canvas):
+class InternshipNumberedCanvas(canvas.Canvas):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._saved_page_states = []
@@ -43,14 +44,14 @@ class AcademicNumberedCanvas(canvas.Canvas):
             # Running Header
             self.setFont("Times-Roman", 8.5)
             self.setFillColor(colors.black)
-            self.drawString(54, 750, "BharatCares Internship Project Report | Akshad Viresh Makhana | Sanjivani University")
+            self.drawString(54, 750, "IBM SkillsBuild Data Analytics with AI Internship 2026 | ID: IBMUEDA4101 | Akshad Viresh Makhana")
             self.setStrokeColor(colors.black)
             self.setLineWidth(0.75)
             self.line(54, 742, 558, 742)
             
             # Running Footer
             self.line(54, 45, 558, 45)
-            self.drawString(54, 32, "Telecom Customer Retention & Revenue Optimization Analytics Platform")
+            self.drawString(54, 32, "BharatCares — AICTE — IBM SkillsBuild Final Internship Project Report")
             self.drawRightString(558, 32, f"Page {self._pageNumber} of {page_count}")
         self.restoreState()
 
@@ -67,22 +68,22 @@ doc = SimpleDocTemplate(
 
 styles = getSampleStyleSheet()
 
-cover_inst_style = ParagraphStyle(
-    'CoverInst',
+cover_header_org = ParagraphStyle(
+    'CoverHeaderOrg',
     parent=styles['Normal'],
     fontName='Times-Bold',
     fontSize=13,
-    leading=18,
+    leading=17,
     textColor=colors.black,
     alignment=TA_CENTER
 )
 
-cover_dept_style = ParagraphStyle(
-    'CoverDept',
+cover_header_sub = ParagraphStyle(
+    'CoverHeaderSub',
     parent=styles['Normal'],
     fontName='Times-Roman',
-    fontSize=10.5,
-    leading=15,
+    fontSize=10,
+    leading=14,
     textColor=colors.black,
     alignment=TA_CENTER
 )
@@ -91,8 +92,8 @@ cover_title_style = ParagraphStyle(
     'CoverTitle',
     parent=styles['Heading1'],
     fontName='Times-Bold',
-    fontSize=21,
-    leading=26,
+    fontSize=20,
+    leading=25,
     textColor=colors.black,
     alignment=TA_CENTER
 )
@@ -101,8 +102,8 @@ cover_sub_style = ParagraphStyle(
     'CoverSub',
     parent=styles['Normal'],
     fontName='Times-Italic',
-    fontSize=11.5,
-    leading=16,
+    fontSize=11,
+    leading=15,
     textColor=colors.black,
     alignment=TA_CENTER
 )
@@ -194,32 +195,33 @@ fig_caption_style = ParagraphStyle(
 story = []
 
 # --------------------------------------------------------------------------------------------------
-# COVER PAGE
+# COVER PAGE: TAILORED FOR BHARATCARES - AICTE - IBM SKILLSBUILD
 # --------------------------------------------------------------------------------------------------
-story.append(Spacer(1, 15))
-story.append(Paragraph("SANJIVANI UNIVERSITY, KOPERGAON, MAHARASHTRA", cover_inst_style))
+story.append(Spacer(1, 10))
+story.append(Paragraph("BHARATCARES — AICTE — IBM SKILLSBUILD INTERNSHIP PROGRAM", cover_header_org))
 story.append(Spacer(1, 3))
-story.append(Paragraph("DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING<br/>ARTIFICIAL INTELLIGENCE & DATA SCIENCE [B.TECH CSE (AI & DS)]", cover_dept_style))
-story.append(Spacer(1, 15))
+story.append(Paragraph("6-WEEK VIRTUAL IBM SKILLSBUILD DATA ANALYTICS WITH AI INTERNSHIP 2026<br/>Offered by BharatCares (by SMEC Trust) in Collaboration with AICTE & IBM SkillsBuild", cover_header_sub))
+story.append(Spacer(1, 14))
 story.append(HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceAfter=2, spaceBefore=4))
-story.append(HRFlowable(width="100%", thickness=0.5, color=colors.black, spaceAfter=22, spaceBefore=1))
+story.append(HRFlowable(width="100%", thickness=0.5, color=colors.black, spaceAfter=20, spaceBefore=1))
 
 story.append(Paragraph("TELECOM CUSTOMER RETENTION & REVENUE OPTIMIZATION ANALYTICS PLATFORM", cover_title_style))
-story.append(Spacer(1, 10))
-story.append(Paragraph("An Enterprise Predictive Intelligence & Prescriptive Decision System<br/>Addressing Subscription Attrition in Telecommunications", cover_sub_style))
-story.append(Spacer(1, 20))
+story.append(Spacer(1, 8))
+story.append(Paragraph("A Complete End-to-End Predictive Intelligence & Prescriptive Decision System<br/>Addressing Subscription Attrition in Telecommunications", cover_sub_style))
+story.append(Spacer(1, 18))
 
-story.append(Paragraph("<b>A PROJECT REPORT SUBMITTED TOWARDS THE COMPLETION OF</b><br/><b>BHARATCARES DATA ANALYTICS & GENERATIVE AI INTERNSHIP / MASTERCLASS</b>", ParagraphStyle('CoverSubNotice', fontName='Times-Roman', fontSize=10, leading=14, textColor=colors.black, alignment=TA_CENTER)))
-story.append(Spacer(1, 22))
+story.append(Paragraph("<b>FINAL CAPSTONE INTERNSHIP PROJECT REPORT & SUBMISSION DOSSIER</b>", ParagraphStyle('CoverSubNotice', fontName='Times-Bold', fontSize=10.5, leading=14, textColor=colors.black, alignment=TA_CENTER)))
+story.append(Spacer(1, 18))
 
 meta_table_data = [
-    [Paragraph("<b>Candidate Name:</b>", table_header_style), Paragraph("<b>AKSHAD VIRESH MAKHANA</b>", table_body_style)],
-    [Paragraph("<b>Academic Degree:</b>", table_header_style), Paragraph("Third Year (TY) Bachelor of Technology in Computer Science & Engineering (Artificial Intelligence & Data Science)", table_body_justified)],
-    [Paragraph("<b>Academic Institution:</b>", table_header_style), Paragraph("Sanjivani University, Kopergaon, Maharashtra", table_body_style)],
-    [Paragraph("<b>Internship Program:</b>", table_header_style), Paragraph("BharatCares Data Analytics & Generative AI Masterclass / Internship", table_body_style)],
-    [Paragraph("<b>Submission Date:</b>", table_header_style), Paragraph("September 2026", table_body_style)],
-    [Paragraph("<b>Dataset Examined:</b>", table_header_style), Paragraph("IBM Cognos Analytics Telco Customer Churn Benchmark (7,043 Records)", table_body_style)],
-    [Paragraph("<b>Software Framework:</b>", table_header_style), Paragraph("Python 3.10+, Streamlit, Scikit-Learn, Plotly, Pandas, NumPy, ReportLab", table_body_style)],
+    [Paragraph("<b>Internship ID:</b>", table_header_style), Paragraph("<b>IBMUEDA4101</b>", table_body_style)],
+    [Paragraph("<b>Intern Candidate:</b>", table_header_style), Paragraph("<b>AKSHAD VIRESH MAKHANA</b>", table_body_style)],
+    [Paragraph("<b>Internship Title:</b>", table_header_style), Paragraph("IBM SkillsBuild Data Analytics with AI Internship 2026", table_body_style)],
+    [Paragraph("<b>Program Host / Collaboration:</b>", table_header_style), Paragraph("BharatCares (by SMEC Trust) in collaboration with AICTE & IBM SkillsBuild", table_body_style)],
+    [Paragraph("<b>Internship Duration:</b>", table_header_style), Paragraph("17 August 2026 to 30 September 2026 (6 Weeks Virtual)", table_body_style)],
+    [Paragraph("<b>Academic Background:</b>", table_header_style), Paragraph("TY B.Tech Computer Science & Engineering (AI & DS), Sanjivani University, Kopergaon", table_body_justified)],
+    [Paragraph("<b>Benchmark Dataset:</b>", table_header_style), Paragraph("IBM Cognos Analytics Telco Customer Churn Benchmark (7,043 Records)", table_body_style)],
+    [Paragraph("<b>Implementation Framework:</b>", table_header_style), Paragraph("Python 3.10+, Streamlit, Scikit-Learn, Plotly, Pandas, NumPy, ReportLab", table_body_style)],
     [Paragraph("<b>Analytical Paradigm:</b>", table_header_style), Paragraph("Data &rarr; Information &rarr; Insight &rarr; Decision &rarr; Action", table_body_style)],
 ]
 t_meta = Table(meta_table_data, colWidths=[140, 364])
@@ -227,16 +229,16 @@ t_meta.setStyle(TableStyle([
     ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#FFFFFF")),
     ('BOX', (0,0), (-1,-1), 1.2, colors.black),
     ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
-    ('TOPPADDING', (0,0), (-1,-1), 4.5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('TOPPADDING', (0,0), (-1,-1), 4),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4),
     ('LEFTPADDING', (0,0), (-1,-1), 8),
     ('RIGHTPADDING', (0,0), (-1,-1), 8),
 ]))
 story.append(t_meta)
-story.append(Spacer(1, 20))
+story.append(Spacer(1, 16))
 
 summary_box = [
-    [Paragraph("<b>EXECUTIVE ABSTRACT</b><br/>This report documents the design, empirical development, and operational deployment of an enterprise-grade customer retention and subscription revenue defense platform for a telecommunications provider serving 7,043 active subscriber accounts. Operating under an annualized customer attrition rate of 26.54%, the enterprise incurs an immediate recurring billing loss of $139,131 per month ($1,669,572 annualized). In strict compliance with the BharatCares submission instructions, this document details the complete end-to-end data pipeline, multi-dimensional exploratory data analysis, formal Key Performance Indicator (KPI) architecture, dual-model supervised machine learning classification (Random Forest & Logistic Regression), a real-time What-If customer risk simulation engine, and an actionable four-pillar prescriptive retention strategy delivering an estimated net annual revenue defense of $320,859.", table_body_justified)]
+    [Paragraph("<b>EXECUTIVE ABSTRACT FOR INTERNSHIP EVALUATION BOARD</b><br/>Submitted in fulfillment of the capstone project requirement for the <b>6-Week Virtual IBM SkillsBuild Data Analytics with AI Internship 2026 (ID: IBMUEDA4101)</b>. This project develops an enterprise customer retention and subscription revenue defense platform for a telecommunications provider serving 7,043 active subscriber accounts. Operating under an annualized customer attrition rate of 26.54%, the enterprise incurs an immediate recurring billing loss of $139,131 per month ($1,669,572 annualized). In strict compliance with the BharatCares submission instructions, this document details the complete end-to-end data pipeline, multi-dimensional exploratory data analysis, formal Key Performance Indicator (KPI) architecture, dual-model supervised machine learning classification (Random Forest & Logistic Regression), a real-time What-If customer risk simulation engine, and an actionable four-pillar prescriptive retention strategy delivering an estimated net annual revenue defense of $320,859.", table_body_justified)]
 ]
 t_sum = Table(summary_box, colWidths=[504])
 t_sum.setStyle(TableStyle([
@@ -464,9 +466,9 @@ if os.path.exists(p10):
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 7: PROJECT LIMITATIONS, FUTURE SCOPE & ACADEMIC DECLARATION
+# SECTION 7: PROJECT LIMITATIONS, FUTURE SCOPE & OFFICIAL UNDERTAKING
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("7. Project Limitations, Future Scope & Academic Declaration", h1_style))
+story.append(Paragraph("7. Project Limitations, Future Scope & Undertaking Agreement", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph("7.1 Methodological Limitations", h2_style))
@@ -487,17 +489,17 @@ story.append(Paragraph(
 
 story.append(Spacer(1, 10))
 
-story.append(Paragraph("7.3 Academic Declaration & Signature Block", h2_style))
+story.append(Paragraph("7.3 Candidate Undertaking & Program Declaration", h2_style))
 story.append(Paragraph(
-    "<b>Candidate Declaration:</b><br/>"
-    "I, <b>Akshad Viresh Makhana</b>, hereby declare that this project titled <i>'Telecom Customer Retention & Revenue Optimization Analytics Platform'</i> has been independently developed and verified by me as part of the <b>BharatCares Data Analytics & Generative AI Internship / Masterclass</b>. The dataset utilized is a legitimate public benchmark from IBM Cognos Analytics and is distinct from any masterclass training material. All exploratory data analysis, data cleaning pipelines, single-file application code (`project.py`), interactive visualizations, and predictive models have been fully verified and tested for production deployment.",
+    "<b>Undertaking Agreement:</b><br/>"
+    "I, <b>Akshad Viresh Makhana</b> (Internship ID: <b>IBMUEDA4101</b>), from <b>Sanjivani University</b>, participating in the <b>AICTE–BharatCares–IBM SkillsBuild Internship Program</b> (Title: <i>IBM SkillsBuild Data Analytics with AI Internship 2026</i>), do hereby declare that this capstone project titled <i>'Telecom Customer Retention & Revenue Optimization Analytics Platform'</i> has been independently developed and verified by me. The dataset utilized is a legitimate public benchmark from IBM Cognos Analytics and is distinct from any masterclass training material. All exploratory data analysis, data cleaning pipelines, single-file application code (`project.py`), interactive visualizations, and predictive models have been fully verified and tested for production deployment.",
     body_justified
 ))
 story.append(Spacer(1, 15))
 
 sign_data = [
-    [Paragraph("<b>Akshad Viresh Makhana</b><br/>Candidate / Student (TY B.Tech CSE AI&DS)<br/>Sanjivani University, Kopergaon, Maharashtra", table_body_justified),
-     Paragraph("<b>BharatCares Masterclass Evaluation Board</b><br/>Data Analytics & Generative AI Internship<br/>Status: Verified, Compliant & Ready for Review", table_body_justified)]
+    [Paragraph("<b>Akshad Viresh Makhana</b><br/>Intern Candidate (ID: <b>IBMUEDA4101</b>)<br/>Sanjivani University, Kopergaon, Maharashtra", table_body_justified),
+     Paragraph("<b>Evaluation & Certification Board</b><br/>BharatCares (by SMEC Trust) | AICTE | IBM SkillsBuild<br/>Status: Completed, Verified & Compliant", table_body_justified)]
 ]
 t_sign = Table(sign_data, colWidths=[250, 254])
 t_sign.setStyle(TableStyle([
@@ -508,5 +510,5 @@ t_sign.setStyle(TableStyle([
 story.append(t_sign)
 
 # Build document
-doc.build(story, canvasmaker=AcademicNumberedCanvas)
-print("Project_Report.pdf with ALL 10 proper full-color screenshots, Times New Roman, and B&W tables generated successfully!")
+doc.build(story, canvasmaker=InternshipNumberedCanvas)
+print("Project_Report.pdf tailored for BharatCares - AICTE - IBM SkillsBuild generated successfully!")

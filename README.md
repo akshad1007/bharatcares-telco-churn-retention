@@ -1,11 +1,14 @@
 # Telecom Customer Retention & Revenue Optimization Platform
-### BharatCares Data Analytics & Predictive Intelligence Internship Project
+### Capstone Project: IBM SkillsBuild Data Analytics with AI Internship 2026
+**Offered by BharatCares (by SMEC Trust) in Collaboration with AICTE & IBM SkillsBuild**
 
-**Candidate:** Akshad Viresh Makhana  
-**Academic Degree:** TY B.Tech Computer Science and Engineering (Artificial Intelligence & Data Science) [B.Tech CSE (AI & DS)]  
-**Academic Institution:** Sanjivani University, Kopargaon, Maharashtra  
-**Internship Track:** BharatCares Data Analytics & Generative AI Masterclass / Internship  
-**Submission Date:** September 2026  
+- **Intern Candidate:** Akshad Viresh Makhana  
+- **Internship ID:** `IBMUEDA4101`  
+- **Program Track:** 6-Week Virtual IBM SkillsBuild Data Analytics with AI Internship 2026  
+- **Internship Duration:** 17 August 2026 to 30 September 2026  
+- **Academic Degree:** TY B.Tech Computer Science and Engineering (Artificial Intelligence & Data Science) [B.Tech CSE (AI & DS)]  
+- **Institution:** Sanjivani University, Kopergaon, Maharashtra  
+- **Official Offer Letter:** [`Akshad Viresh Makhana AICTE IBMSB Data Analytics Internship Offer Letter.pdf`](Akshad%20Viresh%20Makhana%20AICTE%20IBMSB%20Data%20Analytics%20Internship%20Offer%20Letter.pdf)  
 
 ---
 
