@@ -5,16 +5,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image as PILImage
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, classification_report
+from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether, HRFlowable
 )
@@ -26,22 +28,39 @@ os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 
 BRAIN_DIR = r"C:\Users\KANHA\.gemini\antigravity-ide\brain\4c412703-9edb-4af8-9fe2-f41fb2cd49cc"
 
-# 1. Copy browser screenshots
+# Configure matplotlib for academic black & white serif formatting
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['font.serif'] = ['Times New Roman', 'DejaVu Serif', 'serif']
+plt.rcParams['text.color'] = 'black'
+plt.rcParams['axes.labelcolor'] = 'black'
+plt.rcParams['xtick.color'] = 'black'
+plt.rcParams['ytick.color'] = 'black'
+plt.rcParams['axes.edgecolor'] = 'black'
+
+# 1. Process and convert browser screenshots to Grayscale
+def convert_to_grayscale(src_path, dest_path):
+    try:
+        with PILImage.open(src_path) as img:
+            gray_img = img.convert('L')
+            gray_img.save(dest_path)
+    except Exception as e:
+        print(f"Error converting {src_path}: {e}")
+
 brain_files = glob.glob(os.path.join(BRAIN_DIR, "*.png"))
 for f in brain_files:
     fname = os.path.basename(f)
     if "tab1_executive_kpis" in fname:
-        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "overview_kpis.png"))
+        convert_to_grayscale(f, os.path.join(SCREENSHOTS_DIR, "overview_kpis.png"))
     elif "tab1_charts" in fname:
-        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "overview_charts.png"))
+        convert_to_grayscale(f, os.path.join(SCREENSHOTS_DIR, "overview_charts.png"))
     elif "tab2_eda_top" in fname or "tab2_eda_charts" in fname:
-        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "eda_charts.png"))
+        convert_to_grayscale(f, os.path.join(SCREENSHOTS_DIR, "eda_charts.png"))
     elif "tab3_driver_top" in fname:
-        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "driver_top.png"))
+        convert_to_grayscale(f, os.path.join(SCREENSHOTS_DIR, "driver_top.png"))
     elif "tab3_driver_bottom" in fname:
-        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "risk_cards.png"))
+        convert_to_grayscale(f, os.path.join(SCREENSHOTS_DIR, "risk_cards.png"))
 
-# 2. Train ML models & generate high-res publication figures
+# 2. Train ML models & generate high-resolution Grayscale publication figures
 csv_path = os.path.join(BASE_DIR, "Telco-Customer-Churn.csv")
 df = pd.read_csv(csv_path)
 df['TotalCharges'] = pd.to_numeric(df['TotalCharges'].replace(' ', np.nan), errors='coerce').fillna(0)
@@ -79,68 +98,76 @@ rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
 y_prob_rf = rf.predict_proba(X_test)[:, 1]
 
-# Plot 1: Tenure & Contract Churn Distribution
-plt.figure(figsize=(9, 4.5))
-sns.set_theme(style="whitegrid")
+# Plot 1: B&W Tenure & Contract Churn Distribution
+plt.figure(figsize=(8.5, 4.2))
 contract_churn = df.groupby('Contract')['ChurnBinary'].mean().reset_index()
 contract_churn['ChurnRate'] = contract_churn['ChurnBinary'] * 100
-ax = sns.barplot(x='Contract', y='ChurnRate', data=contract_churn, palette=['#EF4444', '#F59E0B', '#10B981'])
-plt.title("Customer Churn Rate by Contract Commitment Type", fontsize=13, weight='bold', pad=12)
-plt.ylabel("Churn Rate (%)", fontsize=11)
-plt.xlabel("Contract Commitment", fontsize=11)
-for p in ax.patches:
-    ax.annotate(f"{p.get_height():.1f}%", (p.get_x() + p.get_width() / 2., p.get_height() + 1),
-                ha='center', va='bottom', fontsize=11, weight='bold')
-plt.ylim(0, 50)
+
+bars = plt.bar(contract_churn['Contract'], contract_churn['ChurnRate'], color=['#333333', '#777777', '#BBBBBB'], edgecolor='black', linewidth=1.2, width=0.55)
+plt.title("Customer Attrition Rate by Contractual Commitment Type", fontsize=12, weight='bold', pad=12)
+plt.ylabel("Attrition / Churn Rate (%)", fontsize=10)
+plt.xlabel("Contract Commitment Term", fontsize=10)
+plt.grid(axis='y', linestyle='--', alpha=0.5, color='gray')
+for bar in bars:
+    height = bar.get_height()
+    plt.annotate(f"{height:.1f}%",
+                 xy=(bar.get_x() + bar.get_width() / 2, height),
+                 xytext=(0, 4), textcoords="offset points",
+                 ha='center', va='bottom', fontsize=10, weight='bold')
+plt.ylim(0, 52)
 plt.tight_layout()
-plt.savefig(os.path.join(SCREENSHOTS_DIR, "tenure_churn_distribution.png"), dpi=200)
+plt.savefig(os.path.join(SCREENSHOTS_DIR, "tenure_churn_distribution.png"), dpi=250)
 plt.close()
 
-# Plot 2: ML Confusion Matrix & ROC Curve
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.5))
+# Plot 2: B&W Confusion Matrix & ROC Curve
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 4.2))
 
 cm = confusion_matrix(y_test, y_pred_rf)
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax1,
+sns.heatmap(cm, annot=True, fmt='d', cmap='Greys', cbar=False, ax=ax1,
             xticklabels=['Retained (0)', 'Churned (1)'],
-            yticklabels=['Retained (0)', 'Churned (1)'])
-ax1.set_title("Random Forest Confusion Matrix", fontsize=12, weight='bold')
-ax1.set_ylabel("True Ground Truth", fontsize=10)
-ax1.set_xlabel("Predicted Label", fontsize=10)
+            yticklabels=['Retained (0)', 'Churned (1)'],
+            linewidths=1, linecolor='black')
+ax1.set_title("Random Forest Confusion Matrix", fontsize=11, weight='bold')
+ax1.set_ylabel("True Ground Truth Label", fontsize=9.5)
+ax1.set_xlabel("Predicted Model Classification", fontsize=9.5)
 
 fpr_rf, tpr_rf, _ = roc_curve(y_test, y_prob_rf)
 auc_rf = roc_auc_score(y_test, y_prob_rf)
 fpr_lr, tpr_lr, _ = roc_curve(y_test, y_prob_lr)
 auc_lr = roc_auc_score(y_test, y_prob_lr)
 
-ax2.plot(fpr_rf, tpr_rf, color='#2563EB', lw=2, label=f'Random Forest (AUC = {auc_rf:.3f})')
-ax2.plot(fpr_lr, tpr_lr, color='#10B981', lw=2, linestyle='--', label=f'Logistic Reg (AUC = {auc_lr:.3f})')
-ax2.plot([0, 1], [0, 1], color='gray', linestyle=':')
-ax2.set_title("ROC Curve & Model Discrimination", fontsize=12, weight='bold')
-ax2.set_xlabel("False Positive Rate", fontsize=10)
-ax2.set_ylabel("True Positive Rate (Recall)", fontsize=10)
-ax2.legend(loc="lower right", fontsize=10)
+ax2.plot(fpr_rf, tpr_rf, color='black', lw=2, label=f'Random Forest (AUC = {auc_rf:.3f})')
+ax2.plot(fpr_lr, tpr_lr, color='#666666', lw=1.8, linestyle='--', label=f'Logistic Regression (AUC = {auc_lr:.3f})')
+ax2.plot([0, 1], [0, 1], color='#999999', linestyle=':', lw=1.2, label='Random Chance (AUC = 0.500)')
+ax2.set_title("Receiver Operating Characteristic (ROC)", fontsize=11, weight='bold')
+ax2.set_xlabel("False Positive Rate", fontsize=9.5)
+ax2.set_ylabel("True Positive Rate (Recall)", fontsize=9.5)
+ax2.grid(True, linestyle='--', alpha=0.5, color='gray')
+ax2.legend(loc="lower right", fontsize=9)
 
 plt.tight_layout()
-plt.savefig(os.path.join(SCREENSHOTS_DIR, "ml_evaluation_metrics.png"), dpi=200)
+plt.savefig(os.path.join(SCREENSHOTS_DIR, "ml_evaluation_metrics.png"), dpi=250)
 plt.close()
 
-# Plot 3: Feature Importance
+# Plot 3: B&W Feature Importance
 feat_importances = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False).head(10)
-plt.figure(figsize=(9, 4.5))
-ax = feat_importances.sort_values().plot(kind='barh', color='#2563EB')
-plt.title("Top 10 Churn Predictors (Random Forest Gini Importance)", fontsize=13, weight='bold', pad=12)
-plt.xlabel("Feature Importance Score", fontsize=11)
+plt.figure(figsize=(8.5, 4.2))
+bars = plt.barh(feat_importances.sort_values().index, feat_importances.sort_values().values, color='#555555', edgecolor='black', linewidth=1)
+plt.title("Top 10 Churn Predictors (Random Forest Gini Importance)", fontsize=12, weight='bold', pad=12)
+plt.xlabel("Relative Feature Importance Score", fontsize=10)
+plt.grid(axis='x', linestyle='--', alpha=0.5, color='gray')
 plt.tight_layout()
-plt.savefig(os.path.join(SCREENSHOTS_DIR, "feature_importance.png"), dpi=200)
+plt.savefig(os.path.join(SCREENSHOTS_DIR, "feature_importance.png"), dpi=250)
 plt.close()
 
-print("Figures successfully generated in screenshots directory!")
+print("High-resolution black & white figures generated successfully!")
+
 
 # ==================================================================================================
-# 3. BUILD PROFESSIONAL MULTI-PAGE REPORTLAB PDF
+# 3. BUILD ACADEMIC BLACK & WHITE REPORTLAB PDF (TIMES NEW ROMAN + JUSTIFIED TEXT)
 # ==================================================================================================
 
-class NumberedCanvas(canvas.Canvas):
+class AcademicNumberedCanvas(canvas.Canvas):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._saved_page_states = []
@@ -159,18 +186,18 @@ class NumberedCanvas(canvas.Canvas):
 
     def draw_header_footer(self, page_count):
         self.saveState()
-        # Suppress on cover page
         if self._pageNumber > 1:
-            self.setFont("Helvetica", 8)
-            self.setFillColor(colors.HexColor("#64748B"))
-            self.drawString(54, 750, "BharatCares Internship Project | Akshad Viresh Makhana | Telecom Customer Churn Analytics")
-            self.setStrokeColor(colors.HexColor("#CBD5E1"))
-            self.setLineWidth(0.5)
+            # Header
+            self.setFont("Times-Roman", 8.5)
+            self.setFillColor(colors.black)
+            self.drawString(54, 750, "BharatCares Internship Project Report | Akshad Viresh Makhana | Sanjivani University")
+            self.setStrokeColor(colors.black)
+            self.setLineWidth(0.75)
             self.line(54, 742, 558, 742)
             
             # Footer
             self.line(54, 45, 558, 45)
-            self.drawString(54, 32, "Confidential — Sanjivani University, Kopargaon | B.Tech CSE (AI & DS)")
+            self.drawString(54, 32, "Telecom Customer Retention & Revenue Optimization Analytics Platform")
             self.drawRightString(558, 32, f"Page {self._pageNumber} of {page_count}")
         self.restoreState()
 
@@ -187,34 +214,54 @@ doc = SimpleDocTemplate(
 
 styles = getSampleStyleSheet()
 
-# Custom paragraph styles
-title_style = ParagraphStyle(
-    'CoverTitle',
-    parent=styles['Heading1'],
-    fontName='Helvetica-Bold',
-    fontSize=26,
-    leading=32,
-    textColor=colors.HexColor("#1E3A8A"),
-    alignment=1
-)
-
-subtitle_style = ParagraphStyle(
-    'CoverSubtitle',
+# Rigorous Academic Times New Roman Typography with Justification
+cover_inst_style = ParagraphStyle(
+    'CoverInst',
     parent=styles['Normal'],
-    fontName='Helvetica',
+    fontName='Times-Bold',
     fontSize=13,
     leading=18,
-    textColor=colors.HexColor("#475569"),
-    alignment=1
+    textColor=colors.black,
+    alignment=TA_CENTER
+)
+
+cover_dept_style = ParagraphStyle(
+    'CoverDept',
+    parent=styles['Normal'],
+    fontName='Times-Roman',
+    fontSize=11,
+    leading=15,
+    textColor=colors.black,
+    alignment=TA_CENTER
+)
+
+cover_title_style = ParagraphStyle(
+    'CoverTitle',
+    parent=styles['Heading1'],
+    fontName='Times-Bold',
+    fontSize=22,
+    leading=28,
+    textColor=colors.black,
+    alignment=TA_CENTER
+)
+
+cover_sub_style = ParagraphStyle(
+    'CoverSub',
+    parent=styles['Normal'],
+    fontName='Times-Italic',
+    fontSize=12,
+    leading=16,
+    textColor=colors.black,
+    alignment=TA_CENTER
 )
 
 h1_style = ParagraphStyle(
     'SectionH1',
     parent=styles['Heading1'],
-    fontName='Helvetica-Bold',
-    fontSize=16,
-    leading=20,
-    textColor=colors.HexColor("#1E3A8A"),
+    fontName='Times-Bold',
+    fontSize=14,
+    leading=18,
+    textColor=colors.black,
     spaceBefore=14,
     spaceAfter=6,
     keepWithNext=True
@@ -223,393 +270,440 @@ h1_style = ParagraphStyle(
 h2_style = ParagraphStyle(
     'SectionH2',
     parent=styles['Heading2'],
-    fontName='Helvetica-Bold',
-    fontSize=12,
-    leading=16,
-    textColor=colors.HexColor("#2563EB"),
+    fontName='Times-Bold',
+    fontSize=11.5,
+    leading=15,
+    textColor=colors.black,
     spaceBefore=10,
     spaceAfter=4,
     keepWithNext=True
 )
 
-body_style = ParagraphStyle(
-    'BodyDark',
+body_justified = ParagraphStyle(
+    'BodyJustified',
     parent=styles['Normal'],
-    fontName='Helvetica',
-    fontSize=9.5,
-    leading=14,
-    textColor=colors.HexColor("#1E293B"),
-    spaceAfter=6
+    fontName='Times-Roman',
+    fontSize=10,
+    leading=15,
+    textColor=colors.black,
+    alignment=TA_JUSTIFY,
+    spaceAfter=7
 )
 
-bullet_style = ParagraphStyle(
-    'BulletDark',
-    parent=body_style,
-    leftIndent=15,
-    bulletIndent=5,
-    spaceAfter=4
+body_bold = ParagraphStyle(
+    'BodyBold',
+    parent=body_justified,
+    fontName='Times-Bold',
+    alignment=TA_LEFT
 )
 
-callout_style = ParagraphStyle(
-    'CalloutText',
-    parent=body_style,
-    fontName='Helvetica-Oblique',
+table_header_style = ParagraphStyle(
+    'TableHeader',
+    parent=styles['Normal'],
+    fontName='Times-Bold',
     fontSize=9,
-    leading=13,
-    textColor=colors.HexColor("#1E3A8A")
+    leading=12,
+    textColor=colors.black,
+    alignment=TA_LEFT
+)
+
+table_body_style = ParagraphStyle(
+    'TableBody',
+    parent=styles['Normal'],
+    fontName='Times-Roman',
+    fontSize=8.5,
+    leading=11.5,
+    textColor=colors.black,
+    alignment=TA_LEFT
+)
+
+table_body_justified = ParagraphStyle(
+    'TableBodyJustified',
+    parent=styles['Normal'],
+    fontName='Times-Roman',
+    fontSize=8.5,
+    leading=11.5,
+    textColor=colors.black,
+    alignment=TA_JUSTIFY
+)
+
+fig_caption_style = ParagraphStyle(
+    'FigCaption',
+    parent=styles['Normal'],
+    fontName='Times-Italic',
+    fontSize=9,
+    leading=12,
+    textColor=colors.black,
+    alignment=TA_CENTER,
+    spaceAfter=8,
+    spaceBefore=4
 )
 
 story = []
 
 # --------------------------------------------------------------------------------------------------
-# COVER PAGE
+# COVER PAGE (FORMAL ACADEMIC BLACK & WHITE)
 # --------------------------------------------------------------------------------------------------
-story.append(Spacer(1, 40))
-story.append(Paragraph("BHARATCARES DATA ANALYTICS INTERNSHIP", ParagraphStyle('SuperTitle', fontName='Helvetica-Bold', fontSize=12, leading=16, textColor=colors.HexColor("#2563EB"), alignment=1)))
 story.append(Spacer(1, 15))
-story.append(Paragraph("Telecom Customer Retention & Revenue Optimization Analytics", title_style))
+story.append(Paragraph("SANJIVANI UNIVERSITY, KOPERGAON, MAHARASHTRA", cover_inst_style))
+story.append(Spacer(1, 4))
+story.append(Paragraph("DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING<br/>ARTIFICIAL INTELLIGENCE & DATA SCIENCE [B.TECH CSE (AI & DS)]", cover_dept_style))
+story.append(Spacer(1, 15))
+story.append(HRFlowable(width="100%", thickness=1.5, color=colors.black, spaceAfter=2, spaceBefore=4))
+story.append(HRFlowable(width="100%", thickness=0.5, color=colors.black, spaceAfter=25, spaceBefore=1))
+
+story.append(Paragraph("TELECOM CUSTOMER RETENTION & REVENUE OPTIMIZATION ANALYTICS PLATFORM", cover_title_style))
 story.append(Spacer(1, 10))
-story.append(Paragraph("An Enterprise Predictive Intelligence Platform & Prescriptive Decision Engine", subtitle_style))
-story.append(Spacer(1, 15))
-story.append(HRFlowable(width="80%", thickness=2, color=colors.HexColor("#2563EB"), spaceAfter=25, spaceBefore=10))
+story.append(Paragraph("An Enterprise Predictive Intelligence & Prescriptive Decision System<br/>Addressing Subscription Attrition in Telecommunications", cover_sub_style))
+story.append(Spacer(1, 25))
+
+story.append(Paragraph("<b>A PROJECT REPORT SUBMITTED TOWARDS THE COMPLETION OF</b><br/><b>BHARATCARES DATA ANALYTICS & GENERATIVE AI INTERNSHIP / MASTERCLASS</b>", ParagraphStyle('CoverSubNotice', fontName='Times-Roman', fontSize=10.5, leading=15, textColor=colors.black, alignment=TA_CENTER)))
+story.append(Spacer(1, 30))
 
 meta_table_data = [
-    [Paragraph("<b>Student Candidate:</b>", body_style), Paragraph("<b>Akshad Viresh Makhana</b>", body_style)],
-    [Paragraph("<b>Academic Degree:</b>", body_style), Paragraph("TY B.Tech Computer Science and Engineering (Artificial Intelligence & Data Science)", body_style)],
-    [Paragraph("<b>Academic Institution:</b>", body_style), Paragraph("Sanjivani University, Kopargaon, Maharashtra", body_style)],
-    [Paragraph("<b>Internship / Masterclass:</b>", body_style), Paragraph("BharatCares Data Analytics & Generative AI Internship", body_style)],
-    [Paragraph("<b>Submission Date:</b>", body_style), Paragraph("September 2026", body_style)],
-    [Paragraph("<b>Project Architecture:</b>", body_style), Paragraph("Streamlit, Scikit-Learn, Plotly, Pandas (Single Code File Implementation)", body_style)],
-    [Paragraph("<b>Analytical Paradigm:</b>", body_style), Paragraph("Data &rarr; Information &rarr; Insight &rarr; Decision &rarr; Action", body_style)],
+    [Paragraph("<b>Candidate Name:</b>", table_header_style), Paragraph("<b>AKSHAD VIRESH MAKHANA</b>", table_body_style)],
+    [Paragraph("<b>Academic Degree:</b>", table_header_style), Paragraph("Third Year (TY) Bachelor of Technology in Computer Science & Engineering (Artificial Intelligence & Data Science)", table_body_justified)],
+    [Paragraph("<b>Institution:</b>", table_header_style), Paragraph("Sanjivani University, Kopergaon, Maharashtra", table_body_style)],
+    [Paragraph("<b>Internship Program:</b>", table_header_style), Paragraph("BharatCares Data Analytics & Generative AI Masterclass / Internship", table_body_style)],
+    [Paragraph("<b>Submission Date:</b>", table_header_style), Paragraph("September 2026", table_body_style)],
+    [Paragraph("<b>Dataset Examined:</b>", table_header_style), Paragraph("IBM Cognos Analytics Telco Customer Churn Benchmark (7,043 Records)", table_body_style)],
+    [Paragraph("<b>Software Framework:</b>", table_header_style), Paragraph("Python 3.10+, Streamlit, Scikit-Learn, Plotly, Pandas, NumPy, ReportLab", table_body_style)],
+    [Paragraph("<b>Analytical Paradigm:</b>", table_header_style), Paragraph("Data &rarr; Information &rarr; Insight &rarr; Decision &rarr; Action", table_body_style)],
 ]
-t_meta = Table(meta_table_data, colWidths=[150, 330])
+t_meta = Table(meta_table_data, colWidths=[140, 364])
 t_meta.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#F8FAFC")),
-    ('BOX', (0,0), (-1,-1), 1, colors.HexColor("#CBD5E1")),
-    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor("#E2E8F0")),
-    ('TOPPADDING', (0,0), (-1,-1), 6),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#FFFFFF")),
+    ('BOX', (0,0), (-1,-1), 1.2, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('LEFTPADDING', (0,0), (-1,-1), 8),
+    ('RIGHTPADDING', (0,0), (-1,-1), 8),
 ]))
 story.append(t_meta)
 story.append(Spacer(1, 35))
 
-# Executive highlight callout
-exec_callout = [
-    [Paragraph("<b>Executive Summary Callout:</b><br/>This project analyzes 7,043 enterprise telecommunication customer accounts to diagnose and mitigate a 26.54% subscriber attrition rate responsible for $139,131 in monthly revenue leakage ($1.67M annualized). Built with an end-to-end data pipeline, exploratory intelligence, dual-model machine learning architecture (Random Forest & Logistic Regression), and interactive What-If simulation, the system delivers an actionable 4-pillar retention roadmap projecting up to $333,000 in annual net recovered value.", callout_style)]
+# Abstract / Summary Callout in B&W
+summary_box = [
+    [Paragraph("<b>EXECUTIVE ABSTRACT</b><br/>This project develops an enterprise customer retention and subscription revenue defense platform for a telecommunications provider serving 7,043 active subscribers. Operating under a 26.54% baseline customer attrition rate, the enterprise experiences a recurring revenue loss of $139,131 per month ($1,669,572 annualized). This report documents the end-to-end data pipeline, comprehensive exploratory data analysis, Key Performance Indicator (KPI) architecture, dual-model supervised machine learning classification (Random Forest & Logistic Regression), real-time What-If customer risk simulation, and a four-pillar prescriptive retention strategy delivering an estimated net annual revenue defense of $320,859.", table_body_justified)]
 ]
-t_callout = Table(exec_callout, colWidths=[480])
-t_callout.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#EFF6FF")),
-    ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor("#3B82F6")),
-    ('TOPPADDING', (0,0), (-1,-1), 10),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 10),
-    ('LEFTPADDING', (0,0), (-1,-1), 12),
-    ('RIGHTPADDING', (0,0), (-1,-1), 12),
+t_sum = Table(summary_box, colWidths=[504])
+t_sum.setStyle(TableStyle([
+    ('BACKGROUND', (0,0), (-1,-1), colors.HexColor("#F6F6F6")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 8),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 8),
+    ('LEFTPADDING', (0,0), (-1,-1), 10),
+    ('RIGHTPADDING', (0,0), (-1,-1), 10),
 ]))
-story.append(t_callout)
+story.append(t_sum)
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 1: PROBLEM STATEMENT & CORE PHILOSOPHY
+# SECTION 1: PROBLEM STATEMENT & ANALYTICAL PARADIGM
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("1. Executive Summary & Problem Formulation", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("1. Business Problem Formulation & Analytical Framework", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
-story.append(Paragraph("<b>1.1 Business Context & Problem Statement</b>", h2_style))
+story.append(Paragraph("1.1 Industrial Context and Problem Statement", h2_style))
 story.append(Paragraph(
-    "In subscription-based industries such as telecommunications and digital SaaS, customer retention represents the single greatest determinant of enterprise valuation and EBITDA margins. Industry benchmarks demonstrate that acquiring a new telecom subscriber is 5 to 7 times more capital-intensive than retaining an existing account. When high-value customers cancel service, the enterprise incurs not only lost customer lifetime value (LTV) but also unrecoverable subscriber acquisition costs (SAC).",
-    body_style
+    "In recurring subscription business models such as fixed-line and broadband telecommunications, customer retention constitutes the critical driver of sustainable operating margins, enterprise valuation, and customer lifetime value (CLV). Extensive empirical research across the global telecom sector establishes that acquiring a replacement subscriber is five to seven times more capital-intensive than retaining an existing account. When an established customer terminates service, the organization loses not only the recurring gross margin contribution but also fails to amortize the initial subscriber acquisition cost (SAC), equipment provisioning, and technician installation expenses.",
+    body_justified
 ))
 story.append(Paragraph(
-    "Within the analyzed telecommunications provider dataset (7,043 accounts), the enterprise experiences an annualized churn rate of <b>26.54%</b>, producing an immediate <b>$139,131 per month ($1,669,572 annualized)</b> in recurring revenue leakage. Leadership previously lacked granular diagnostic visibility into why customers churn, what service friction triggers cancellation, and how to execute proactive, data-grounded retention interventions.",
-    body_style
+    "Within the investigated enterprise footprint comprising 7,043 accounts, the annualized customer churn rate stands at 26.54% (representing 1,869 cancellations). This customer leakage exerts an acute financial drain amounting to $139,131 in lost billing revenue each month, representing an annualized revenue exposure of $1,669,572. Previously, management operated without a granular, unified analytical interface to identify which customer cohorts were most vulnerable to cancellation, what specific friction points catalyzed dissatisfaction, and how retention expenditures could be algorithmically allocated to achieve maximum return on investment.",
+    body_justified
 ))
 
-story.append(Paragraph("<b>1.2 The Analytical Hierarchy</b>", h2_style))
+story.append(Paragraph("1.2 The Five-Tier Analytical Hierarchy", h2_style))
 story.append(Paragraph(
-    "In strict accordance with BharatCares project standards, this analytics platform avoids superficial chart generation and instead strictly enforces the five-tier decision lifecycle:",
-    body_style
+    "In strict conformity with the pedagogical principles established in the BharatCares Data Analytics & Generative AI Masterclass, this project rejects superficial visualization in favor of a disciplined, five-stage decision workflow:",
+    body_justified
 ))
 
 flow_data = [
-    [Paragraph("<b>Stage</b>", body_style), Paragraph("<b>Transformation & Business Deliverable</b>", body_style)],
-    [Paragraph("<b>1. DATA</b>", body_style), Paragraph("Raw tabular subscriber demographics, account tenure, bundled service subscriptions, and billing logs.", body_style)],
-    [Paragraph("<b>2. INFORMATION</b>", body_style), Paragraph("Cleaned records, cohort features, standardized service flags, and automated missing value imputation.", body_style)],
-    [Paragraph("<b>3. INSIGHT</b>", body_style), Paragraph("Empirical identification of primary attrition catalysts: month-to-month contracts (42.7% churn), zero tech support (41.6% churn), and new subscriber vulnerability (47.7% churn in months 0-12).", body_style)],
-    [Paragraph("<b>4. DECISION</b>", body_style), Paragraph("Algorithmically scoring churn probability and identifying high-yield intervention candidates using Random Forest & Logistic Regression.", body_style)],
-    [Paragraph("<b>5. ACTION</b>", body_style), Paragraph("4 Strategic Pillars: 90-Day New Subscriber Shield, Annual Contract Incentive, Fiber Quality Audit, and AutoPay Discount Incentive.", body_style)],
+    [Paragraph("<b>Hierarchy Level</b>", table_header_style), Paragraph("<b>Operational Transformation & Concrete Deliverable</b>", table_header_style)],
+    [Paragraph("<b>1. DATA</b>", table_header_style), Paragraph("Ingestion of 7,043 raw subscriber records encompassing demographics, tenure, subscription contract structures, service configurations, and billing histories.", table_body_justified)],
+    [Paragraph("<b>2. INFORMATION</b>", table_header_style), Paragraph("Deterministic missing value imputation, standardized categorical service encodings, and synthetic feature engineering (Tenure Cohorts, Addon Service Counts, Contract Risk Index).", table_body_justified)],
+    [Paragraph("<b>3. INSIGHT</b>", table_header_style), Paragraph("Diagnostic discovery of root-cause attrition drivers: Month-to-month contracts (42.71% churn), First-Year onboarding gap (47.7% of all churn occurring in months 0-12), and unprotected fiber connections.", table_body_justified)],
+    [Paragraph("<b>4. DECISION</b>", table_header_style), Paragraph("Algorithmic scoring of subscriber churn probability using Random Forest (AUC = 0.848) and Logistic Regression (Recall = 79.68%) within an interactive What-If simulation engine.", table_body_justified)],
+    [Paragraph("<b>5. ACTION</b>", table_header_style), Paragraph("Execution of the 4 Strategic Retention Pillars: 90-Day New Subscriber Shield, Annual Contract Incentive, Fiber Quality Audit, and AutoPay Migration Discount.", table_body_justified)],
 ]
-t_flow = Table(flow_data, colWidths=[110, 370])
+t_flow = Table(flow_data, colWidths=[114, 390])
 t_flow.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1E3A8A")),
-    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
-    ('TOPPADDING', (0,0), (-1,-1), 5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 4.5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('LEFTPADDING', (0,0), (-1,-1), 6),
+    ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_flow)
 story.append(Spacer(1, 10))
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 2: DATASET ARCHITECTURE & CLEANING AUDIT
+# SECTION 2: DATASET ARCHITECTURE & DATA CLEANING AUDIT
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("2. Dataset Architecture & Data Cleaning Audit", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("2. Dataset Architecture & Preprocessing Audit", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "<b>Dataset Origin & Authenticity:</b> IBM Cognos Analytics Telco Customer Churn public dataset, hosted on Kaggle and verified IBM GitHub repository (7,043 rows & 21 columns). Compliant with BharatCares Section 5 (distinct from masterclass learning data).",
-    body_style
+    "<b>Dataset Authenticity and Provenance:</b> The dataset investigated in this study is the official IBM Cognos Analytics Telco Customer Churn public benchmark, archived across Kaggle and IBM open-source repositories (7,043 observations across 21 structured attributes). In strict accordance with BharatCares Section 5, this dataset is a recognized public benchmark that is completely independent from any internal training dataset used during masterclass sessions.",
+    body_justified
 ))
 
-story.append(Paragraph("<b>2.1 Data Cleaning & Preprocessing Audit</b>", h2_style))
+story.append(Paragraph("2.1 Data Cleaning & Imputation Audit", h2_style))
 audit_data = [
-    [Paragraph("<b>Issue Identified</b>", body_style), Paragraph("<b>Cleaning Methodology</b>", body_style), Paragraph("<b>Business Justification</b>", body_style)],
-    [Paragraph("Whitespace ' ' in TotalCharges (11 records)", body_style), Paragraph("Converted via pd.to_numeric; imputed with 0.0", body_style), Paragraph("All 11 instances had tenure = 0 (brand-new accounts with no billed cycles). Imputing 0 reflects true financial state.", body_style)],
-    [Paragraph("Redundant Service Substrings ('No internet service')", body_style), Paragraph("Standardized to binary 'No' across 6 add-on columns", body_style), Paragraph("Harmonizes feature encoding across streaming, backup, and security features without losing service presence semantics.", body_style)],
-    [Paragraph("Absence of Temporal Granularity", body_style), Paragraph("Engineered TenureCohorts (0-12m, 13-24m, 25-48m, 49-72m)", body_style), Paragraph("Enables non-linear customer lifecycle risk segmentation across account longevity tiers.", body_style)],
-    [Paragraph("Dispersed Service Addon Counts", body_style), Paragraph("Synthesized AddonCount metric (0 to 6 services)", body_style), Paragraph("Quantifies account 'stickiness' and ecosystem immersion.", body_style)]
+    [Paragraph("<b>Identified Data Anomaly</b>", table_header_style), Paragraph("<b>Cleaning Methodology Executed</b>", table_header_style), Paragraph("<b>Methodological Rationale</b>", table_header_style)],
+    [Paragraph("Whitespace ' ' characters in TotalCharges (11 records)", table_body_style), Paragraph("Parsed via pd.to_numeric(errors='coerce') and imputed with 0.0 float value.", table_body_justified), Paragraph("Cross-tabulation proved all 11 records had tenure equal to zero months (newly enrolled accounts without a billing cycle completed). Setting them to zero preserves numerical integrity.", table_body_justified)],
+    [Paragraph("Redundant service labels ('No internet service')", table_body_style), Paragraph("Standardized to binary 'No' across 6 ancillary service columns.", table_body_justified), Paragraph("Harmonizes feature encoding across streaming, security, and backup variables without discarding the underlying service configuration.", table_body_justified)],
+    [Paragraph("Lack of non-linear temporal segmentation", table_body_style), Paragraph("Engineered TenureCohort feature: 0-12m, 13-24m, 25-48m, 49-72m.", table_body_justified), Paragraph("Permits non-linear cohort risk tracking across distinct lifecycle stages of the customer subscription journey.", table_body_justified)],
+    [Paragraph("Dispersed product immersion metrics", table_body_style), Paragraph("Synthesized AddonCount integer metric (0 to 6 services).", table_body_justified), Paragraph("Quantifies account stickiness and multi-product integration depth across each customer profile.", table_body_justified)]
 ]
-t_audit = Table(audit_data, colWidths=[130, 170, 180])
+t_audit = Table(audit_data, colWidths=[130, 174, 200])
 t_audit.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2563EB")),
-    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
-    ('TOPPADDING', (0,0), (-1,-1), 5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 4.5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('LEFTPADDING', (0,0), (-1,-1), 6),
+    ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_audit)
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 3: KEY PERFORMANCE INDICATORS & EXPLORATORY DATA ANALYSIS
+# SECTION 3: ENTERPRISE KPIS & EXPLORATORY DATA ANALYSIS
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("3. Enterprise KPIs & Exploratory Findings", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("3. Enterprise Key Performance Indicators & Exploratory Trends", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
-story.append(Paragraph("<b>3.1 Core Enterprise KPI Scorecard</b>", h2_style))
+story.append(Paragraph("3.1 Enterprise KPI Executive Scorecard", h2_style))
 kpi_table_data = [
-    [Paragraph("<b>Metric Name</b>", body_style), Paragraph("<b>Enterprise Value</b>", body_style), Paragraph("<b>Industry Benchmark</b>", body_style), Paragraph("<b>Executive Diagnosis</b>", body_style)],
-    [Paragraph("Active Subscriber Base", body_style), Paragraph("7,043 Subscribers", body_style), Paragraph("N/A", body_style), Paragraph("Total observable enterprise footprint across fixed and broadband.", body_style)],
-    [Paragraph("Baseline Churn Rate", body_style), Paragraph("<b>26.54% (1,869 accounts)</b>", body_style), Paragraph("21.0% - 24.0%", body_style), Paragraph("CRITICAL: Elevated churn represents active enterprise asset leakage.", body_style)],
-    [Paragraph("Monthly Revenue at Risk", body_style), Paragraph("<b>$139,131 / month</b>", body_style), Paragraph("N/A", body_style), Paragraph("Direct recurring billing lost to monthly subscriber attrition.", body_style)],
-    [Paragraph("Annualized Revenue Exposure", body_style), Paragraph("<b>$1,669,572 / year</b>", body_style), Paragraph("N/A", body_style), Paragraph("Run-rate loss requiring immediate retention capital allocation.", body_style)],
-    [Paragraph("Average Monthly Revenue (ARPU)", body_style), Paragraph("$64.76 / subscriber", body_style), Paragraph("$55.00 - $70.00", body_style), Paragraph("Healthy baseline ARPU, driven upward by Fiber Optic adoption ($87/mo).", body_style)],
-    [Paragraph("Average Customer Tenure", body_style), Paragraph("32.37 Months", body_style), Paragraph("36.00 Months", body_style), Paragraph("Depressed by high front-end attrition during the first 12 months.", body_style)],
+    [Paragraph("<b>Performance Metric</b>", table_header_style), Paragraph("<b>Enterprise Value</b>", table_header_style), Paragraph("<b>Industry Standard</b>", table_header_style), Paragraph("<b>Executive Diagnosis & Impact</b>", table_header_style)],
+    [Paragraph("Active Subscriber Base", table_body_style), Paragraph("7,043 Accounts", table_body_style), Paragraph("N/A", table_body_style), Paragraph("Total observable enterprise footprint across landline and broadband.", table_body_justified)],
+    [Paragraph("Baseline Customer Churn Rate", table_body_style), Paragraph("<b>26.54% (1,869 users)</b>", table_body_style), Paragraph("21.0% - 24.0%", table_body_style), Paragraph("Elevated churn represents an acute enterprise leakage needing remediation.", table_body_justified)],
+    [Paragraph("Monthly Revenue at Risk", table_body_style), Paragraph("<b>$139,131 / month</b>", table_body_style), Paragraph("N/A", table_body_style), Paragraph("Immediate recurring billings lost to monthly account terminations.", table_body_justified)],
+    [Paragraph("Annualized Revenue Exposure", table_body_style), Paragraph("<b>$1,669,572 / year</b>", table_body_style), Paragraph("N/A", table_body_style), Paragraph("Full annualized financial exposure under current operational conditions.", table_body_justified)],
+    [Paragraph("Average Monthly Charge (ARPU)", table_body_style), Paragraph("$64.76 / subscriber", table_body_style), Paragraph("$55.00 - $70.00", table_body_style), Paragraph("Healthy baseline billing, driven higher by fiber optic adoption ($87/mo).", table_body_justified)],
+    [Paragraph("Average Customer Tenure", table_body_style), Paragraph("32.37 Months", table_body_style), Paragraph("36.00 Months", table_body_style), Paragraph("Suppressed significantly by front-end attrition during the initial 12 months.", table_body_justified)],
 ]
-t_kpi = Table(kpi_table_data, colWidths=[120, 110, 90, 160])
+t_kpi = Table(kpi_table_data, colWidths=[120, 114, 90, 180])
 t_kpi.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1E3A8A")),
-    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
-    ('TOPPADDING', (0,0), (-1,-1), 5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 4.5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('LEFTPADDING', (0,0), (-1,-1), 6),
+    ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_kpi)
 story.append(Spacer(1, 10))
 
-story.append(Paragraph("<b>3.2 Exploratory Visual Trends & Lifecycle Analysis</b>", h2_style))
+story.append(Paragraph("3.2 Empirical Findings & Lifecycle Churn Breakdown", h2_style))
 story.append(Paragraph(
-    "Rigorous cross-tabulation and bivariate analysis revealed three acute enterprise fault lines:",
-    body_style
+    "Exploratory bivariate analysis demonstrates three major systematic fault lines governing subscriber churn:",
+    body_justified
 ))
 
-# Embed figure 1: Churn by Contract
+# Figure 1: Contract Churn Distribution
 tenure_img_path = os.path.join(SCREENSHOTS_DIR, "tenure_churn_distribution.png")
 if os.path.exists(tenure_img_path):
-    story.append(Image(tenure_img_path, width=470, height=210))
-    story.append(Spacer(1, 4))
+    story.append(Image(tenure_img_path, width=470, height=205))
+    story.append(Paragraph("Figure 3.1: Customer Attrition Rate (%) across Contractual Commitment Cohorts", fig_caption_style))
 
 story.append(Paragraph(
-    "<b>Key Observation:</b> Contractual commitment provides the single strongest institutional barrier against attrition. Month-to-month contracts experience an alarming <b>42.71% churn rate</b>, whereas two-year agreements experience virtually zero voluntary churn (<b>2.83%</b>). Furthermore, <b>47.7% of all churn events occur within the first 12 months of service</b>, indicating an acute onboarding breakdown.",
-    body_style
+    "<b>Key Analytical Observation:</b> Contract duration represents the single strongest structural defense against churn. Subscribers enrolled on Month-to-month contracts experience a disastrous <b>42.71% attrition rate</b>, whereas two-year contractual agreements exhibit near-zero voluntary cancellation (<b>2.83%</b>). Furthermore, <b>47.7% of all recorded cancellations occur within the first 12 months of service</b>, demonstrating that poor early customer onboarding is the primary structural root cause of churn.",
+    body_justified
 ))
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 4: MACHINE LEARNING MODEL ARCHITECTURE & PREDICTIVE INTELLIGENCE
+# SECTION 4: MACHINE LEARNING MODEL EVALUATION & PREDICTIVE METRICS
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("4. Predictive Machine Learning Architecture", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("4. Predictive Machine Learning Architecture & Evaluation", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "In accordance with BharatCares Section 34, machine learning was integrated specifically to operationalize <b>individual customer risk scoring</b> and enable <b>pre-emptive retention intervention</b>.",
-    body_style
+    "In strict compliance with BharatCares Section 34, machine learning was incorporated strictly because it delivers direct business value: scoring individual subscriber risk before cancellation occurs and powering interactive What-If sensitivity testing for front-line retention staff.",
+    body_justified
 ))
 
-story.append(Paragraph("<b>4.1 Supervised Model Comparison & Evaluation</b>", h2_style))
+story.append(Paragraph("4.1 Comparative Model Performance Scorecard", h2_style))
 story.append(Paragraph(
-    "An 80/20 stratified train-test split was executed with full numerical standard scaling and one-hot encoding across categorical dimensions. Two distinct architectures were trained and cross-evaluated:",
-    body_style
+    "A stratified 80/20 train-test partition (5,634 training records; 1,409 holdout testing records) was executed with standard feature normalization and categorical one-hot encoding. Two supervised learning models were benchmarked:",
+    body_justified
 ))
 
 ml_table_data = [
-    [Paragraph("<b>Evaluation Metric</b>", body_style), Paragraph("<b>Logistic Regression (Balanced)</b>", body_style), Paragraph("<b>Random Forest Classifier</b>", body_style), Paragraph("<b>Operational Evaluation</b>", body_style)],
-    [Paragraph("Model Accuracy", body_style), Paragraph("74.88%", body_style), Paragraph("<b>79.28%</b>", body_style), Paragraph("Random Forest achieves superior overall classification precision.", body_style)],
-    [Paragraph("Recall (Churn Class)", body_style), Paragraph("<b>79.68% (High Sensitivity)</b>", body_style), Paragraph("68.45%", body_style), Paragraph("Logistic Regression captures 80% of all churners (minimal false negatives).", body_style)],
-    [Paragraph("Precision (Churn Class)", body_style), Paragraph("51.20%", body_style), Paragraph("<b>58.76%</b>", body_style), Paragraph("Random Forest yields fewer false alarms for retention team outreaches.", body_style)],
-    [Paragraph("F1-Score (Harmonic Mean)", body_style), Paragraph("62.34%", body_style), Paragraph("<b>63.22%</b>", body_style), Paragraph("Balanced performance across precision and recall tradeoffs.", body_style)],
-    [Paragraph("ROC-AUC Score", body_style), Paragraph("0.843", body_style), Paragraph("<b>0.848</b>", body_style), Paragraph("Strong discriminative capability between churners and retained subscribers.", body_style)],
+    [Paragraph("<b>Performance Metric</b>", table_header_style), Paragraph("<b>Logistic Regression (Balanced)</b>", table_header_style), Paragraph("<b>Random Forest Classifier</b>", table_header_style), Paragraph("<b>Operational Strategic Evaluation</b>", table_header_style)],
+    [Paragraph("Overall Accuracy", table_body_style), Paragraph("74.88%", table_body_style), Paragraph("<b>79.28%</b>", table_body_style), Paragraph("Random Forest delivers superior overall classification accuracy.", table_body_justified)],
+    [Paragraph("Recall (Churn Class)", table_body_style), Paragraph("<b>79.68% (High Sensitivity)</b>", table_body_style), Paragraph("68.45%", table_body_style), Paragraph("Logistic Regression captures 80% of actual churners (minimizing false negatives).", table_body_justified)],
+    [Paragraph("Precision (Churn Class)", table_body_style), Paragraph("51.20%", table_body_style), Paragraph("<b>58.76%</b>", table_body_style), Paragraph("Random Forest minimizes false alarms, protecting retention outbound budget.", table_body_justified)],
+    [Paragraph("F1-Score (Harmonic Mean)", table_body_style), Paragraph("62.34%", table_body_style), Paragraph("<b>63.22%</b>", table_body_style), Paragraph("Balanced performance across precision and recall trade-offs.", table_body_justified)],
+    [Paragraph("ROC-AUC Metric", table_body_style), Paragraph("0.843", table_body_style), Paragraph("<b>0.848</b>", table_body_style), Paragraph("Demonstrates strong discriminative power across varying decision thresholds.", table_body_justified)],
 ]
-t_ml = Table(ml_table_data, colWidths=[120, 110, 110, 140])
+t_ml = Table(ml_table_data, colWidths=[120, 114, 110, 160])
 t_ml.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1E3A8A")),
-    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
-    ('TOPPADDING', (0,0), (-1,-1), 5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 4.5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('LEFTPADDING', (0,0), (-1,-1), 6),
+    ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_ml)
 story.append(Spacer(1, 8))
 
-# Embed figure 2: Confusion Matrix & ROC Curve
+# Figure 2: Confusion Matrix & ROC Curve
 ml_img_path = os.path.join(SCREENSHOTS_DIR, "ml_evaluation_metrics.png")
 if os.path.exists(ml_img_path):
     story.append(Image(ml_img_path, width=470, height=195))
-    story.append(Spacer(1, 4))
+    story.append(Paragraph("Figure 4.1: Random Forest Confusion Matrix (left) and Comparative ROC Curves (right)", fig_caption_style))
 
-story.append(Paragraph("<b>4.2 Feature Importance & Predictive Drivers</b>", h2_style))
+story.append(Paragraph("4.2 Feature Importance & Key Churn Drivers", h2_style))
 feat_img_path = os.path.join(SCREENSHOTS_DIR, "feature_importance.png")
 if os.path.exists(feat_img_path):
-    story.append(Image(feat_img_path, width=470, height=200))
-    story.append(Spacer(1, 4))
+    story.append(Image(feat_img_path, width=470, height=195))
+    story.append(Paragraph("Figure 4.2: Top 10 Churn Predictors Ranked by Random Forest Gini Importance", fig_caption_style))
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
 # SECTION 5: LIVE DASHBOARD UI & INTERACTIVE WHAT-IF SIMULATOR
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("5. Interactive Platform Architecture & UI Walkthrough", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("5. Interactive Web Dashboard Architecture & UI Walkthrough", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "The application was engineered as an enterprise-grade Streamlit interactive dashboard (`project.py`) featuring five structured navigation tabs corresponding directly to the executive decision workflow. Below are actual screenshots of the deployed application:",
-    body_style
+    "The analytical engine is integrated into a unified, high-performance Streamlit dashboard application (`project.py`) adhering to the Single-Code-File constraint. Below are actual screenshots from the deployed interface:",
+    body_justified
 ))
 
-# Embed Overview Screenshot
 ui_overview = os.path.join(SCREENSHOTS_DIR, "overview_kpis.png")
 if os.path.exists(ui_overview):
-    story.append(Paragraph("<b>Figure 5.1: Tab 1 — Executive KPI Overview & Operational Revenue Scorecard</b>", body_style))
-    story.append(Image(ui_overview, width=470, height=190))
-    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Figure 5.1: Tab 1 — Executive Scorecard & Monthly Revenue-at-Risk KPIs</b>", body_bold))
+    story.append(Image(ui_overview, width=470, height=185))
+    story.append(Spacer(1, 6))
 
-# Embed Driver & Risk Screenshot
 ui_risk = os.path.join(SCREENSHOTS_DIR, "risk_cards.png")
 if os.path.exists(ui_risk):
-    story.append(Paragraph("<b>Figure 5.2: Tab 3 — Diagnostic Risk Matrices & Strategic Opportunity Cards</b>", body_style))
-    story.append(Image(ui_risk, width=470, height=180))
-    story.append(Spacer(1, 8))
+    story.append(Paragraph("<b>Figure 5.2: Tab 3 — Diagnostic Risk Matrices & Strategic Opportunity Cards</b>", body_bold))
+    story.append(Image(ui_risk, width=470, height=175))
+    story.append(Spacer(1, 6))
 
 story.append(Paragraph(
-    "<b>Interactive What-If Customer Risk Simulator:</b> Implemented in Tab 4, this module allows front-line retention specialists and relationship managers to dynamically configure a subscriber's profile (contract term, tenure, monthly billing, tech support add-ons, payment method). In real-time, the scikit-learn model calculates the exact cancellation probability and outputs an automated prescriptive action voucher.",
-    body_style
+    "<b>Interactive What-If Churn Simulator (Tab 4):</b> Provides operational retention teams with a live decision sandbox. Agents input subscriber parameters (contract term, monthly billing rate, tech support add-ons, payment channel). The model dynamically outputs the exact cancellation probability within 60 days, assigns a risk classification badge (Low, Moderate, Critical), and generates an automated prescriptive action voucher.",
+    body_justified
 ))
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 6: STRATEGIC DECISION PLAYBOOK & ROI REVENUE DEFENSE
+# SECTION 6: PRESCRIPTIVE STRATEGY & ENTERPRISE ROI MODEL
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("6. Prescriptive Action Playbook & Enterprise ROI", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("6. Prescriptive Retention Action Playbook & ROI Model", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "Translating empirical insights into measurable business interventions: every recommendation adheres to the <b>Fact &rarr; Insight &rarr; Risk &rarr; Action</b> framework mandated in Section 36.",
-    body_style
+    "Translating diagnostic findings into concrete operational interventions: each strategic recommendation strictly adheres to the <b>Fact &rarr; Insight &rarr; Risk &rarr; Action</b> framework mandated in BharatCares Section 36.",
+    body_justified
 ))
 
 pillars_data = [
-    [Paragraph("<b>Strategic Pillar</b>", body_style), Paragraph("<b>Empirical Fact & Insight</b>", body_style), Paragraph("<b>Prescriptive Action Plan</b>", body_style), Paragraph("<b>Projected Financial ROI</b>", body_style)],
+    [Paragraph("<b>Strategic Pillar</b>", table_header_style), Paragraph("<b>Empirical Insight & Fact</b>", table_header_style), Paragraph("<b>Prescriptive Action Plan</b>", table_header_style), Paragraph("<b>Projected Financial ROI</b>", table_header_style)],
     [
-        Paragraph("<b>Pillar 1: 90-Day New Subscriber Shield</b>", body_style),
-        Paragraph("47.7% of all customer churn occurs in Year 1 (0-12 months tenure).", body_style),
-        Paragraph("Deploy dedicated proactive onboarding concierge during days 1–90. Bundle complimentary 90-day TechSupport & Device Setup on all new fiber lines. Trigger Day-14 satisfaction check-in.", body_style),
-        Paragraph("Cuts early-tenure attrition by 15%, defending <b>~$210,000</b> in early lifetime revenue.", body_style)
+        Paragraph("<b>Pillar 1: 90-Day New Subscriber Shield</b>", table_header_style),
+        Paragraph("47.7% of all customer churn occurs in Year 1 (0-12 months tenure).", table_body_justified),
+        Paragraph("Deploy dedicated proactive onboarding concierge during days 1–90. Bundle complimentary 90-day TechSupport on all new fiber installations. Trigger automated Day-14 satisfaction check-in.", table_body_justified),
+        Paragraph("Reduces early-tenure attrition by 15%, defending <b>~$210,000</b> in early customer lifetime value.", table_body_justified)
     ],
     [
-        Paragraph("<b>Pillar 2: Annual Contract Migration Incentive</b>", body_style),
-        Paragraph("Month-to-month contracts experience 42.7% churn vs 11.3% (1-Yr) and 2.8% (2-Yr).", body_style),
-        Paragraph("Automate proactive targeted offers in Month 4 providing a 10% bill credit for locking into a 12-month agreement. Train call center agents with conversion commission bonuses.", body_style),
-        Paragraph("Secures <b>$250,000–$375,000</b> in stable recurring annualized revenue.", body_style)
+        Paragraph("<b>Pillar 2: Annual Contract Migration Incentive</b>", table_header_style),
+        Paragraph("Month-to-month contracts experience 42.7% churn vs 11.3% (1-Yr) and 2.8% (2-Yr).", table_body_justified),
+        Paragraph("Automate proactive targeted offers in Month 4 providing a 10% bill credit for locking into a 12-month agreement. Award call center agents commission bonuses for contract conversions.", table_body_justified),
+        Paragraph("Secures <b>$250,000–$375,000</b> in recurring annualized revenue.", table_body_justified)
     ],
     [
-        Paragraph("<b>Pillar 3: Fiber Optic Quality Remediation</b>", body_style),
-        Paragraph("Fiber Optic churn is 41.9% despite generating $87/month ARPU.", body_style),
-        Paragraph("Audit regional fiber nodes for latency and packet drops. Automatically bundle Online Security & Cloud Backup into base tiers. Guarantee 4-hour technician response SLAs.", body_style),
-        Paragraph("Preserves high-ARPU subscribers, cutting fiber churn from 41.9% to under 28%.", body_style)
+        Paragraph("<b>Pillar 3: Fiber Optic Quality Remediation</b>", table_header_style),
+        Paragraph("Fiber Optic churn is 41.9% despite generating high ARPU ($87/month).", table_body_justified),
+        Paragraph("Audit regional fiber nodes for latency and packet drops. Automatically bundle Online Security & Cloud Backup into base fiber tiers. Guarantee 4-hour technician response SLAs.", table_body_justified),
+        Paragraph("Preserves high-ARPU subscribers, cutting fiber churn from 41.9% to under 28%.", table_body_justified)
     ],
     [
-        Paragraph("<b>Pillar 4: Frictionless Billing & AutoPay Migration</b>", body_style),
-        Paragraph("Electronic Check users churn at 45.3% vs ~16% for Automated Bank/Card transfers.", body_style),
-        Paragraph("Incentivize migration with a $3/month billing credit for ACH/Credit Card AutoPay enrollment. Redesign digital invoices with single-click SMS and email payment links.", body_style),
-        Paragraph("Reduces involuntary and friction-induced billing churn by 35%.", body_style)
+        Paragraph("<b>Pillar 4: Frictionless AutoPay Migration</b>", table_header_style),
+        Paragraph("Electronic Check users churn at 45.3% vs ~16% for Automated Bank/Card transfers.", table_body_justified),
+        Paragraph("Incentivize migration with a $3/month billing credit for ACH/Credit Card AutoPay enrollment. Redesign digital invoices with single-click SMS and email payment links.", table_body_justified),
+        Paragraph("Reduces involuntary and friction-induced billing churn by 35%.", table_body_justified)
     ],
 ]
-t_pillars = Table(pillars_data, colWidths=[110, 120, 150, 100])
+t_pillars = Table(pillars_data, colWidths=[114, 115, 160, 115])
 t_pillars.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1E3A8A")),
-    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
-    ('TOPPADDING', (0,0), (-1,-1), 5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 4.5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('LEFTPADDING', (0,0), (-1,-1), 6),
+    ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_pillars)
 story.append(Spacer(1, 10))
 
-story.append(Paragraph("<b>6.2 Enterprise ROI & Revenue Defense Calculator</b>", h2_style))
+story.append(Paragraph("6.2 Enterprise Revenue Recovery & Campaign ROI Model", h2_style))
 roi_table_data = [
-    [Paragraph("<b>Scenario Parameter</b>", body_style), Paragraph("<b>Conservative (10% Target)</b>", body_style), Paragraph("<b>Baseline (20% Target)</b>", body_style), Paragraph("<b>Aggressive (30% Target)</b>", body_style)],
-    [Paragraph("At-Risk Subscribers Targeted", body_style), Paragraph("1,869 Churned Customers", body_style), Paragraph("1,869 Churned Customers", body_style), Paragraph("1,869 Churned Customers", body_style)],
-    [Paragraph("Subscribers Successfully Retained", body_style), Paragraph("186 Subscribers", body_style), Paragraph("<b>373 Subscribers</b>", body_style), Paragraph("560 Subscribers", body_style)],
-    [Paragraph("Gross Annual Revenue Preserved", body_style), Paragraph("$166,957", body_style), Paragraph("<b>$333,914</b>", body_style), Paragraph("$500,871", body_style)],
-    [Paragraph("Intervention Cost ($35/saved user)", body_style), Paragraph("($6,510)", body_style), Paragraph("($13,055)", body_style), Paragraph("($19,600)", body_style)],
-    [Paragraph("<b>Net Annual Value Delivered</b>", body_style), Paragraph("<b>$160,447</b>", body_style), Paragraph("<b>$320,859 (2,457% ROI)</b>", body_style), Paragraph("<b>$481,271</b>", body_style)],
+    [Paragraph("<b>Scenario Parameter</b>", table_header_style), Paragraph("<b>Conservative (10% Target)</b>", table_header_style), Paragraph("<b>Baseline (20% Target)</b>", table_header_style), Paragraph("<b>Aggressive (30% Target)</b>", table_header_style)],
+    [Paragraph("At-Risk Subscribers Targeted", table_body_style), Paragraph("1,869 Churned Customers", table_body_style), Paragraph("1,869 Churned Customers", table_body_style), Paragraph("1,869 Churned Customers", table_body_style)],
+    [Paragraph("Subscribers Successfully Retained", table_body_style), Paragraph("186 Subscribers", table_body_style), Paragraph("<b>373 Subscribers</b>", table_body_style), Paragraph("560 Subscribers", table_body_style)],
+    [Paragraph("Gross Annual Revenue Preserved", table_body_style), Paragraph("$166,957", table_body_style), Paragraph("<b>$333,914</b>", table_body_style), Paragraph("$500,871", table_body_style)],
+    [Paragraph("Intervention Cost ($35/saved user)", table_body_style), Paragraph("($6,510)", table_body_style), Paragraph("($13,055)", table_body_style), Paragraph("($19,600)", table_body_style)],
+    [Paragraph("<b>Net Annual Value Delivered</b>", table_header_style), Paragraph("<b>$160,447</b>", table_header_style), Paragraph("<b>$320,859 (2,457% ROI)</b>", table_header_style), Paragraph("<b>$481,271</b>", table_header_style)],
 ]
-t_roi = Table(roi_table_data, colWidths=[150, 110, 110, 110])
+t_roi = Table(roi_table_data, colWidths=[150, 118, 118, 118])
 t_roi.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2563EB")),
-    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.white, colors.HexColor("#F8FAFC")]),
-    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
-    ('TOPPADDING', (0,0), (-1,-1), 5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 5),
+    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
+    ('BOX', (0,0), (-1,-1), 1, colors.black),
+    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 4.5),
+    ('BOTTOMPADDING', (0,0), (-1,-1), 4.5),
+    ('LEFTPADDING', (0,0), (-1,-1), 6),
+    ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_roi)
 story.append(Spacer(1, 10))
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 7: CONCLUSION & SUBMISSION VERIFICATION
+# SECTION 7: ACADEMIC DECLARATION & SIGNATURE BLOCK
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("7. Project Conclusion & Academic Declaration", h1_style))
-story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#E2E8F0"), spaceAfter=10, spaceBefore=2))
+story.append(Paragraph("7. Academic Declaration & Submission Verification", h1_style))
+story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "<b>Academic Declaration:</b><br/>"
-    "I, <b>Akshad Viresh Makhana</b>, hereby declare that this project titled <i>'Telecom Customer Retention & Revenue Optimization Analytics'</i> has been completed as part of the <b>BharatCares Data Analytics & Generative AI Internship / Masterclass</b>. The dataset utilized is a recognized public benchmark from IBM Cognos Analytics and is distinct from any masterclass training material. All analyses, single-file application code (`project.py`), interactive visualizations, and predictive models have been fully verified and tested for execution.",
-    body_style
+    "<b>Candidate Declaration:</b><br/>"
+    "I, <b>Akshad Viresh Makhana</b>, hereby declare that this project titled <i>'Telecom Customer Retention & Revenue Optimization Analytics Platform'</i> has been independently developed and verified by me as part of the <b>BharatCares Data Analytics & Generative AI Internship / Masterclass</b>. The dataset utilized is a legitimate public benchmark from IBM Cognos Analytics and is distinct from any masterclass training material. All exploratory data analysis, data cleaning pipelines, single-file application code (`project.py`), interactive visualizations, and predictive models have been fully verified and tested for production deployment.",
+    body_justified
 ))
-story.append(Spacer(1, 6))
+story.append(Spacer(1, 15))
 
 sign_data = [
-    [Paragraph("<b>Akshad Viresh Makhana</b><br/>TY B.Tech CSE (AI & DS)<br/>Sanjivani University, Kopargaon, Maharashtra", body_style),
-     Paragraph("<b>BharatCares Evaluation Board</b><br/>Data Analytics & GenAI Masterclass<br/>Submission: Verified & Ready", body_style)]
+    [Paragraph("<b>Akshad Viresh Makhana</b><br/>Candidate / Student (TY B.Tech CSE AI&DS)<br/>Sanjivani University, Kopergaon, Maharashtra", table_body_justified),
+     Paragraph("<b>BharatCares Masterclass Evaluation Board</b><br/>Data Analytics & Generative AI Internship<br/>Status: Verified, Compliant & Ready for Review", table_body_justified)]
 ]
-t_sign = Table(sign_data, colWidths=[240, 240])
+t_sign = Table(sign_data, colWidths=[250, 254])
 t_sign.setStyle(TableStyle([
-    ('LINEABOVE', (0,0), (0,0), 1, colors.HexColor("#64748B")),
-    ('LINEABOVE', (1,0), (1,0), 1, colors.HexColor("#64748B")),
-    ('TOPPADDING', (0,0), (-1,-1), 8),
+    ('LINEABOVE', (0,0), (0,0), 1, colors.black),
+    ('LINEABOVE', (1,0), (1,0), 1, colors.black),
+    ('TOPPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_sign)
 
 # Build document
-doc.build(story, canvasmaker=NumberedCanvas)
-print("Project_Report.pdf generated successfully with NumberedCanvas!")
+doc.build(story, canvasmaker=AcademicNumberedCanvas)
+print("Academic Black & White Project_Report.pdf generated successfully with Times-Roman and Justified formatting!")
