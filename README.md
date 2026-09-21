@@ -19,7 +19,7 @@ This enterprise-grade data analytics and machine learning solution addresses hig
 
 $$\mathbf{Data} \longrightarrow \mathbf{Information} \longrightarrow \mathbf{Insight} \longrightarrow \mathbf{Decision} \longrightarrow \mathbf{Action}$$
 
-![Platform Executive Overview](screenshots/overview_kpis.png)
+![Platform Executive Overview](screenshots/tab1_executive_kpis.png)
 *Figure: Live Executive Dashboard displaying Core Retention KPIs and Revenue Risk Scorecard*
 
 The platform integrates automated data preprocessing, multi-dimensional exploratory data analysis (EDA), executive KPI monitoring, supervised machine learning (Random Forest & Logistic Regression), a real-time What-If churn simulator, and an executive decision playbook with an automated ROI revenue recovery calculator.
@@ -124,11 +124,8 @@ Multi-dimensional analysis was performed to test empirical hypotheses:
 - **Service Stack Correlation:** Customers without `TechSupport` had a **41.6% churn rate**, compared to **15.2%** for customers with `TechSupport` (2.7× reduction in cancellation).
 - **Payment Method Analysis:** Electronic check customers exhibited an alarming **45.3% churn rate**, while automated ACH/Credit Card subscribers churned at only **15.9%**.
  
-![Customer Churn by Contract Term](screenshots/tenure_churn_distribution.png)
-*Figure: Full-Color Categorical Breakdown of Customer Attrition Rate by Contract Commitment Term*
-
-![Interactive Exploratory Data Analysis](screenshots/eda_charts.png)
-*Figure: Live Streamlit Bivariate Analytics across Tenure Cohorts and Addon Support Services*
+![Interactive Exploratory Data Analysis](screenshots/tab2_eda_trends.png)
+*Figure: Live Streamlit Bivariate Analytics across Tenure Cohorts, Contract Terms, and Internet Services*
 
 ---
 
@@ -181,11 +178,8 @@ Two complementary supervised learning algorithms were deployed to support dual o
 | **F1-Score** | 62.34% | **63.22%** | Balanced harmonic performance. |
 | **ROC-AUC Score** | 0.843 | **0.848** | Strong discriminative ability between churners and loyal accounts. |
 
-![ML Evaluation Metrics](screenshots/ml_evaluation_metrics.png)
-*Figure: Random Forest Confusion Matrix (left) and ROC Discrimination Curve (right)*
-
-![Feature Importance](screenshots/feature_importance.png)
-*Figure: Top 10 Churn Predictors by Gini Importance Score*
+![Machine Learning Model Evaluation](screenshots/tab4_ml_models.png)
+*Figure: Live Random Forest & Logistic Regression Performance Metrics, Confusion Matrix, and ROC Curve*
 
 ---
 
@@ -195,32 +189,26 @@ The platform is organized into 5 intuitive analytical tabs matching the decision
 ### Tab 1: Executive KPIs & Overview (What is happening?)
 Features 5 top-level KPI metric cards, monthly recurring revenue loss indicators, churn breakdown donut charts, and contractual revenue exposure distributions.
 
-![Executive KPIs](screenshots/overview_kpis.png)
+![Executive KPIs & Overview](screenshots/tab1_executive_kpis.png)
 *Figure: Top-Level Active Footprint, Churn Rate, and Monthly Revenue at Risk Scorecards*
-
-![Revenue Breakdown and Tenure Distribution](screenshots/overview_charts.png)
-*Figure: Monthly Revenue Exposure and Contract Distribution Analysis*
 
 ### Tab 2: Exploratory Data Analysis & Trends (What is the trend?)
 Interactive visualizations analyzing tenure curves, internet service tiers, and service ecosystem adoption.
 
-![EDA Trends](screenshots/eda_charts.png)
-*Figure: Interactive Multi-Dimensional Life-Cycle Curves and Service Stack Adoption*
-
 ### Tab 3: Driver & Risk Analysis (Why is it happening?)
 Correlation heatmaps, feature impact rankings, enterprise risk matrices, and strategic opportunity cards.
-
-![Driver Correlation Analysis](screenshots/driver_top.png)
-*Figure: Correlation Heatmap and Key Driver Hierarchy*
-
-![Risk Matrices and Opportunity Cards](screenshots/risk_cards.png)
-*Figure: Diagnostic Risk Matrices and Strategic Opportunity Scorecards*
 
 ### Tab 4: Predictive Machine Learning & What-If Simulator
 Allows retention agents to input subscriber attributes (tenure, contract type, monthly charges, add-on services) to receive an instantaneous churn probability score and prescriptive action guidance.
 
+![Interactive What-If Churn Simulator](screenshots/tab4_whatif_simulator.png)
+*Figure: Real-Time Risk Scoring Gauge (Critical Churn Risk) with Prescriptive Retention Voucher*
+
 ### Tab 5: Decisions & Action Playbook (What should be done?)
 Presents the 4 strategic pillars of customer retention and an interactive **Retention ROI Calculator** where managers can simulate churn reduction targets and compute net annualized revenue recovery.
+
+![Retention ROI Calculator](screenshots/tab5_roi_calculator.png)
+*Figure: Interactive Retention ROI Calculator, Net Annual Preserved Revenue, and Exportable Action Memorandum*
 
 ---
 
