@@ -208,8 +208,8 @@ Ensure Python 3.10 or later is installed on your system.
 
 1. **Clone or Download the Repository:**
    ```bash
-   git clone https://github.com/<your-username>/<repo-name>.git
-   cd <repo-name>
+   git clone https://github.com/akshad1007/bharatcares-telco-churn-retention.git
+   cd bharatcares-telco-churn-retention
    ```
 
 2. **Create and Activate a Virtual Environment (Recommended):**
