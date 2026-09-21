@@ -81,10 +81,12 @@ def create_docx_report():
     normal_font.name = 'Times New Roman'
     normal_font.size = Pt(11)
     normal_font.color.rgb = RGBColor(0, 0, 0)
+    normal_style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     
     def add_p(text, bold=False, italic=False, align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_after=6, space_before=0, font_size=11):
         p = doc.add_paragraph()
         p.alignment = align
+        p.paragraph_format.alignment = align
         p.paragraph_format.space_after = Pt(space_after)
         p.paragraph_format.space_before = Pt(space_before)
         p.paragraph_format.line_spacing = 1.15
@@ -126,6 +128,7 @@ def create_docx_report():
     def add_bullet(lead, body):
         p = doc.add_paragraph(style='List Bullet')
         p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.space_before = Pt(0)
         p.paragraph_format.line_spacing = 1.15
@@ -520,6 +523,22 @@ def create_docx_report():
     for row in sig_table.rows:
         for cell in row.cells:
             set_cell_border(cell, top=dict(sz=0, val='none', color='FFFFFF'), bottom=dict(sz=0, val='none', color='FFFFFF'), left=dict(sz=0, val='none', color='FFFFFF'), right=dict(sz=0, val='none', color='FFFFFF'))
+
+    # Enforce justified alignment across all text and tables
+    for p in doc.paragraphs:
+        txt = p.text.strip()
+        # Preserve centered title lines, figure captions, and headers
+        if not txt.startswith("AICTE") and not txt.startswith("6-Week") and not txt.startswith("FINAL INTERNSHIP") and not txt.startswith("CUSTOMER CHURN") and not txt.startswith("An Enterprise") and not txt.startswith("Figure "):
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+
+    for table in doc.tables:
+        if table != sig_table:  # keep signature clean
+            for row in table.rows:
+                for cell in row.cells:
+                    for p in cell.paragraphs:
+                        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                        p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
 
     docx_path = os.path.join(BASE_DIR, "AkshadMakhana_ProjectReport.docx")
     doc.save(docx_path)

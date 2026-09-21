@@ -167,7 +167,7 @@ table_body_style = ParagraphStyle(
     fontSize=8.5,
     leading=11.5,
     textColor=colors.black,
-    alignment=TA_LEFT
+    alignment=TA_JUSTIFY
 )
 
 table_body_justified = ParagraphStyle(
