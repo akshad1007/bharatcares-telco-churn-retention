@@ -12,11 +12,12 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether, HRFlowable
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether, HRFlowable
 )
 from reportlab.pdfgen import canvas
 
 BASE_DIR = r"c:\Users\KANHA\Desktop\Internship"
+SCREENSHOTS_DIR = os.path.join(BASE_DIR, "screenshots")
 csv_path = os.path.join(BASE_DIR, "Telco-Customer-Churn.csv")
 
 # Load and compute real metrics from dataset
@@ -62,10 +63,10 @@ tn, fp, fn, tp = cm_rf.ravel()
 feat_importances = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False).head(10)
 
 # --------------------------------------------------------------------------------------------------
-# ReportLab Canvas & Styling (Strictly Black & White, Times New Roman, Justified)
+# ReportLab Canvas & Styling (Times New Roman, Justified text, Black & White tables, Images included)
 # --------------------------------------------------------------------------------------------------
 
-class TextOnlyNumberedCanvas(canvas.Canvas):
+class AcademicNumberedCanvas(canvas.Canvas):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._saved_page_states = []
@@ -187,6 +188,13 @@ body_justified = ParagraphStyle(
     spaceAfter=6
 )
 
+body_bold = ParagraphStyle(
+    'BodyBold',
+    parent=body_justified,
+    fontName='Times-Bold',
+    alignment=TA_LEFT
+)
+
 table_header_style = ParagraphStyle(
     'TableHeader',
     parent=styles['Normal'],
@@ -215,6 +223,18 @@ table_body_justified = ParagraphStyle(
     leading=11.5,
     textColor=colors.black,
     alignment=TA_JUSTIFY
+)
+
+fig_caption_style = ParagraphStyle(
+    'FigCaption',
+    parent=styles['Normal'],
+    fontName='Times-Italic',
+    fontSize=9,
+    leading=12,
+    textColor=colors.black,
+    alignment=TA_CENTER,
+    spaceAfter=8,
+    spaceBefore=4
 )
 
 story = []
@@ -354,9 +374,9 @@ story.append(t_audit)
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 3: ENTERPRISE KPIS & DETAILED EMPIRICAL BREAKDOWNS
+# SECTION 3: ENTERPRISE KPIS & DETAILED EMPIRICAL BREAKDOWNS + CHART
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("3. Enterprise Key Performance Indicators & Empirical Findings", h1_style))
+story.append(Paragraph("3. Enterprise Key Performance Indicators & Empirical Trends", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph("3.1 Enterprise KPI Executive Scorecard", h2_style))
@@ -380,13 +400,19 @@ t_kpi.setStyle(TableStyle([
     ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_kpi)
-story.append(Spacer(1, 10))
+story.append(Spacer(1, 8))
 
-story.append(Paragraph("3.2 Empirical Lifecycle Attrition by Tenure Cohort", h2_style))
+story.append(Paragraph("3.2 Empirical Lifecycle Attrition & Contract Analysis", h2_style))
 story.append(Paragraph(
-    "Segmenting the subscriber base into temporal tenure cohorts proves conclusively that customer attrition is heavily front-loaded in the subscription lifecycle. The table below details the statistical distribution across tenure tiers:",
+    "Segmenting the subscriber base into temporal tenure cohorts proves conclusively that customer attrition is heavily front-loaded in the subscription lifecycle. The chart below illustrates attrition across contract commitment terms:",
     body_justified
 ))
+
+# Figure 3.1: Contract Churn Distribution Chart
+tenure_img_path = os.path.join(SCREENSHOTS_DIR, "tenure_churn_distribution.png")
+if os.path.exists(tenure_img_path):
+    story.append(Image(tenure_img_path, width=470, height=205))
+    story.append(Paragraph("Figure 3.1: Customer Attrition Rate (%) across Contractual Commitment Cohorts", fig_caption_style))
 
 tenure_table_data = [
     [Paragraph("<b>Tenure Cohort</b>", table_header_style), Paragraph("<b>Total Subscribers</b>", table_header_style), Paragraph("<b>Retained Base</b>", table_header_style), Paragraph("<b>Churned Count</b>", table_header_style), Paragraph("<b>Cohort Churn %</b>", table_header_style), Paragraph("<b>Share of Total Churn</b>", table_header_style)],
@@ -408,40 +434,11 @@ t_tenure.setStyle(TableStyle([
     ('RIGHTPADDING', (0,0), (-1,-1), 5),
 ]))
 story.append(t_tenure)
-story.append(Spacer(1, 10))
-
-story.append(Paragraph("3.3 Structural Attrition Breakdown: Contract Term & Payment Channel", h2_style))
-story.append(Paragraph(
-    "Cross-tabulation across billing channels and contractual agreements demonstrates extreme behavioral divergence. Month-to-month contracts and electronic check payments exhibit the highest concentrations of attrition:",
-    body_justified
-))
-
-struct_table_data = [
-    [Paragraph("<b>Operational Dimension</b>", table_header_style), Paragraph("<b>Customer Segment</b>", table_header_style), Paragraph("<b>Total Volume</b>", table_header_style), Paragraph("<b>Churned Volume</b>", table_header_style), Paragraph("<b>Segment Churn Rate</b>", table_header_style), Paragraph("<b>Risk Classification</b>", table_header_style)],
-    [Paragraph("Contract Commitment", table_body_style), Paragraph("Month-to-month", table_body_style), Paragraph("3,875 (55.0%)", table_body_style), Paragraph("1,655", table_body_style), Paragraph("<b>42.71%</b>", table_body_style), Paragraph("CRITICAL RISK", table_body_style)],
-    [Paragraph("Contract Commitment", table_body_style), Paragraph("One year", table_body_style), Paragraph("1,473 (20.9%)", table_body_style), Paragraph("166", table_body_style), Paragraph("11.27%", table_body_style), Paragraph("Moderate Risk", table_body_style)],
-    [Paragraph("Contract Commitment", table_body_style), Paragraph("Two year", table_body_style), Paragraph("1,695 (24.1%)", table_body_style), Paragraph("48", table_body_style), Paragraph("<b>2.83%</b>", table_body_style), Paragraph("SECURE ANCHOR", table_body_style)],
-    [Paragraph("Payment Mechanism", table_body_style), Paragraph("Electronic Check", table_body_style), Paragraph("2,365 (33.6%)", table_body_style), Paragraph("1,071", table_body_style), Paragraph("<b>45.29%</b>", table_body_style), Paragraph("CRITICAL RISK", table_body_style)],
-    [Paragraph("Payment Mechanism", table_body_style), Paragraph("Mailed Check", table_body_style), Paragraph("1,612 (22.9%)", table_body_style), Paragraph("308", table_body_style), Paragraph("19.11%", table_body_style), Paragraph("Moderate Risk", table_body_style)],
-    [Paragraph("Payment Mechanism", table_body_style), Paragraph("Bank Transfer (Auto)", table_body_style), Paragraph("1,544 (21.9%)", table_body_style), Paragraph("258", table_body_style), Paragraph("16.71%", table_body_style), Paragraph("Low Risk", table_body_style)],
-    [Paragraph("Payment Mechanism", table_body_style), Paragraph("Credit Card (Auto)", table_body_style), Paragraph("1,522 (21.6%)", table_body_style), Paragraph("232", table_body_style), Paragraph("15.24%", table_body_style), Paragraph("Low Risk", table_body_style)],
-]
-t_struct = Table(struct_table_data, colWidths=[100, 114, 80, 75, 75, 60])
-t_struct.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
-    ('BOX', (0,0), (-1,-1), 1, colors.black),
-    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
-    ('TOPPADDING', (0,0), (-1,-1), 4),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-    ('LEFTPADDING', (0,0), (-1,-1), 5),
-    ('RIGHTPADDING', (0,0), (-1,-1), 5),
-]))
-story.append(t_struct)
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 4: MACHINE LEARNING MODEL ARCHITECTURE & EVALUATION
+# SECTION 4: MACHINE LEARNING MODEL ARCHITECTURE & EVALUATION + CHARTS
 # --------------------------------------------------------------------------------------------------
 story.append(Paragraph("4. Predictive Machine Learning Architecture & Evaluation", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
@@ -471,85 +468,44 @@ t_ml.setStyle(TableStyle([
     ('RIGHTPADDING', (0,0), (-1,-1), 6),
 ]))
 story.append(t_ml)
-story.append(Spacer(1, 10))
+story.append(Spacer(1, 8))
 
-story.append(Paragraph("4.2 Random Forest Confusion Matrix Breakdown (N = 1,409 Holdout Test Set)", h2_style))
-story.append(Paragraph(
-    "To provide complete transparency into operational error distribution, the 2x2 confusion matrix is tabulated below:",
-    body_justified
-))
+# Figure 4.1: Confusion Matrix & ROC Curve Chart
+ml_img_path = os.path.join(SCREENSHOTS_DIR, "ml_evaluation_metrics.png")
+if os.path.exists(ml_img_path):
+    story.append(Image(ml_img_path, width=470, height=195))
+    story.append(Paragraph("Figure 4.1: Random Forest Confusion Matrix (left) and Comparative ROC Curves (right)", fig_caption_style))
 
-cm_table_data = [
-    [Paragraph("<b>Classification Category</b>", table_header_style), Paragraph("<b>Predicted Retained (Class 0)</b>", table_header_style), Paragraph("<b>Predicted Churned (Class 1)</b>", table_header_style), Paragraph("<b>Class Total / Operational Impact</b>", table_header_style)],
-    [Paragraph("<b>Actual Retained (Ground Truth 0)</b>", table_body_style), Paragraph(f"<b>True Negatives (TN): {tn:,}</b> (83.19%)", table_body_style), Paragraph(f"False Positives (FP): {fp:,} (16.81%)", table_body_style), Paragraph("1,035 Accounts — Stable base correctly left uninterrupted.", table_body_justified)],
-    [Paragraph("<b>Actual Churned (Ground Truth 1)</b>", table_body_style), Paragraph(f"False Negatives (FN): {fn:,} (31.55%)", table_body_style), Paragraph(f"<b>True Positives (TP): {tp:,}</b> (68.45%)", table_body_style), Paragraph("374 Accounts — High-risk churners flagged for retention.", table_body_justified)],
-    [Paragraph("<b>Model Performance Metrics</b>", table_header_style), Paragraph("Negative Predictive Value: 87.21%", table_body_style), Paragraph("Positive Predictive Value: 58.76%", table_body_style), Paragraph(f"Holdout Test Accuracy: {accuracy_score(y_test, y_pred_rf)*100:.2f}%", table_body_style)],
-]
-t_cm = Table(cm_table_data, colWidths=[124, 120, 120, 140])
-t_cm.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
-    ('BACKGROUND', (0,-1), (-1,-1), colors.HexColor("#F2F2F2")),
-    ('BOX', (0,0), (-1,-1), 1, colors.black),
-    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
-    ('TOPPADDING', (0,0), (-1,-1), 4),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-    ('LEFTPADDING', (0,0), (-1,-1), 6),
-    ('RIGHTPADDING', (0,0), (-1,-1), 6),
-]))
-story.append(t_cm)
-story.append(Spacer(1, 10))
-
-story.append(Paragraph("4.3 Top 10 Feature Importance Rankings (Random Forest Gini Impurity)", h2_style))
-feat_data = [
-    [Paragraph("<b>Rank</b>", table_header_style), Paragraph("<b>Feature Name</b>", table_header_style), Paragraph("<b>Relative Importance Weight</b>", table_header_style), Paragraph("<b>Behavioral Interpretation & Business Context</b>", table_header_style)],
-]
-
-rank_desc = {
-    'tenure': 'Account longevity; churn risk decays dramatically as account matures past month 24.',
-    'TotalCharges': 'Cumulative lifetime billings; proxy for long-term customer commitment and relationship depth.',
-    'MonthlyCharges': 'Monthly pricing burden; higher price elasticity induces churn when value perception drops.',
-    'Contract_Two year': 'Institutional switching resistance; long-term commitment virtually extinguishes voluntary exit.',
-    'InternetService_Fiber optic': 'High-ARPU broadband; elevated cancellation driven by service instability and lack of support.',
-    'Contract_One year': 'Medium-term commitment; reduces churn by approximately 75% compared to month-to-month plans.',
-    'PaymentMethod_Electronic check': 'Payment friction point; non-automated payment induces bill shock and involuntary cancellation.',
-    'TechSupport_Yes': 'Account anchor; protective service reducing customer frustration during connectivity failures.',
-    'OnlineSecurity_Yes': 'Cybersecurity bundle; creates high software switching barrier and defends account retention.',
-    'PaperlessBilling_Yes': 'Billing preference; digital invoice customers exhibit higher price comparison and churn awareness.'
-}
-
-for i, (fname, fscore) in enumerate(feat_importances.items(), start=1):
-    desc = rank_desc.get(fname, 'Engineered behavioral attribute impacting customer retention.')
-    feat_data.append([
-        Paragraph(f"#{i}", table_body_style),
-        Paragraph(f"<b>{fname}</b>", table_body_style),
-        Paragraph(f"{fscore*100:.2f}%", table_body_style),
-        Paragraph(desc, table_body_justified)
-    ])
-
-t_feat = Table(feat_data, colWidths=[35, 120, 85, 264])
-t_feat.setStyle(TableStyle([
-    ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E5E5E5")),
-    ('BOX', (0,0), (-1,-1), 1, colors.black),
-    ('INNERGRID', (0,0), (-1,-1), 0.5, colors.black),
-    ('TOPPADDING', (0,0), (-1,-1), 3.5),
-    ('BOTTOMPADDING', (0,0), (-1,-1), 3.5),
-    ('LEFTPADDING', (0,0), (-1,-1), 5),
-    ('RIGHTPADDING', (0,0), (-1,-1), 5),
-]))
-story.append(t_feat)
+# Figure 4.2: Feature Importance Chart
+feat_img_path = os.path.join(SCREENSHOTS_DIR, "feature_importance.png")
+if os.path.exists(feat_img_path):
+    story.append(Image(feat_img_path, width=470, height=195))
+    story.append(Paragraph("Figure 4.2: Top 10 Churn Predictors Ranked by Random Forest Gini Importance", fig_caption_style))
 
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 5: PLATFORM ARCHITECTURE & DECISION WORKFLOW
+# SECTION 5: PLATFORM ARCHITECTURE & UI WALKTHROUGH + SCREENSHOTS
 # --------------------------------------------------------------------------------------------------
-story.append(Paragraph("5. Platform Architecture & Interactive Decision Workflow", h1_style))
+story.append(Paragraph("5. Interactive Web Dashboard Architecture & UI Walkthrough", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "The software implementation strictly satisfies the **Single-Code-File Requirement** (Section 21) within `project.py` (926 lines of production Python code). The user interface is structured across five dedicated navigation tabs directly reflecting the operational decision hierarchy:",
+    "The software implementation strictly satisfies the **Single-Code-File Requirement** (Section 21) within `project.py` (926 lines of production Python code). Below are actual visual captures of the deployed interactive Streamlit interface:",
     body_justified
 ))
+
+ui_overview = os.path.join(SCREENSHOTS_DIR, "overview_kpis.png")
+if os.path.exists(ui_overview):
+    story.append(Paragraph("<b>Figure 5.1: Tab 1 — Executive Scorecard & Monthly Revenue-at-Risk KPIs</b>", body_bold))
+    story.append(Image(ui_overview, width=470, height=185))
+    story.append(Spacer(1, 6))
+
+ui_risk = os.path.join(SCREENSHOTS_DIR, "risk_cards.png")
+if os.path.exists(ui_risk):
+    story.append(Paragraph("<b>Figure 5.2: Tab 3 — Diagnostic Risk Matrices & Strategic Opportunity Cards</b>", body_bold))
+    story.append(Image(ui_risk, width=470, height=175))
+    story.append(Spacer(1, 6))
 
 tab_matrix_data = [
     [Paragraph("<b>Navigation Module</b>", table_header_style), Paragraph("<b>Analytical Objective</b>", table_header_style), Paragraph("<b>Key Visual & Interactive Elements</b>", table_header_style), Paragraph("<b>Operational Business Decisions Enabled</b>", table_header_style)],
@@ -595,21 +551,6 @@ t_tab.setStyle(TableStyle([
     ('RIGHTPADDING', (0,0), (-1,-1), 5),
 ]))
 story.append(t_tab)
-story.append(Spacer(1, 10))
-
-story.append(Paragraph("5.2 Mathematical Formulation of What-If Simulation Engine", h2_style))
-story.append(Paragraph(
-    "Within Tab 4, subscriber cancellation probability is computed via the logistic sigmoid link function over the regularized linear estimator vector, augmented by the ensemble voting probability from the 100-tree Random Forest:",
-    body_justified
-))
-story.append(Paragraph(
-    "$$P(\\text{Churn} = 1 \\mid \\mathbf{x}) = \\frac{1}{1 + e^{-(\\beta_0 + \\boldsymbol{\\beta}^T \\mathbf{x})}}$$",
-    ParagraphStyle('Formula', fontName='Times-Italic', fontSize=10, leading=14, alignment=TA_CENTER)
-))
-story.append(Paragraph(
-    "Where $\\mathbf{x}$ represents the feature vector (standardized tenure, normalized monthly billing, contract length indicator, payment method encoding, and protective add-on indicators). If $P(\\text{Churn}) \\ge 0.50$, the system automatically issues a high-priority retention voucher prescribing: (1) An upgrade to a 1-Year agreement with a 12% billing credit, (2) Complimentary 90-day TechSupport setup, and (3) A $10 enrollment incentive for automated card/bank billing.",
-    body_justified
-))
 
 story.append(PageBreak())
 
@@ -736,5 +677,5 @@ t_sign.setStyle(TableStyle([
 story.append(t_sign)
 
 # Build document
-doc.build(story, canvasmaker=TextOnlyNumberedCanvas)
-print("100% Pure Text & Table Academic Black & White Project_Report.pdf generated successfully!")
+doc.build(story, canvasmaker=AcademicNumberedCanvas)
+print("Complete Academic Project_Report.pdf with Images, Times-Roman, Justified text, and B&W tables generated successfully!")
