@@ -1,11 +1,15 @@
 import os
+import shutil
+import glob
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import confusion_matrix, roc_auc_score, accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -18,9 +22,27 @@ from reportlab.pdfgen import canvas
 
 BASE_DIR = r"c:\Users\KANHA\Desktop\Internship"
 SCREENSHOTS_DIR = os.path.join(BASE_DIR, "screenshots")
-csv_path = os.path.join(BASE_DIR, "Telco-Customer-Churn.csv")
+os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 
-# Load and compute real metrics from dataset
+BRAIN_DIR = r"C:\Users\KANHA\.gemini\antigravity-ide\brain\4c412703-9edb-4af8-9fe2-f41fb2cd49cc"
+
+# 1. Copy ORIGINAL FULL-COLOR browser screenshots (NO grayscale conversion)
+brain_files = glob.glob(os.path.join(BRAIN_DIR, "*.png"))
+for f in brain_files:
+    fname = os.path.basename(f)
+    if "tab1_executive_kpis" in fname:
+        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "overview_kpis.png"))
+    elif "tab1_charts" in fname:
+        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "overview_charts.png"))
+    elif "tab2_eda_top" in fname or "tab2_eda_charts" in fname:
+        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "eda_charts.png"))
+    elif "tab3_driver_top" in fname:
+        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "driver_top.png"))
+    elif "tab3_driver_bottom" in fname:
+        shutil.copy(f, os.path.join(SCREENSHOTS_DIR, "risk_cards.png"))
+
+# 2. Train ML models & generate high-resolution VIBRANT COLOR publication figures
+csv_path = os.path.join(BASE_DIR, "Telco-Customer-Churn.csv")
 df = pd.read_csv(csv_path)
 df['TotalCharges'] = pd.to_numeric(df['TotalCharges'].replace(' ', np.nan), errors='coerce').fillna(0)
 df['ChurnBinary'] = df['Churn'].apply(lambda x: 1 if str(x).strip().lower() == 'yes' else 0)
@@ -30,7 +52,7 @@ bins = [-1, 12, 24, 48, 72]
 labels = ['0-12m (High Risk)', '13-24m', '25-48m', '49-72m (Loyal)']
 df['TenureCohort'] = pd.cut(df['tenure'], bins=bins, labels=labels)
 
-# ML calculations
+# ML Prep
 drop_cols = ['customerID', 'Churn', 'TenureCohort']
 ml_df = df.drop(columns=[c for c in drop_cols if c in df.columns])
 cat_cols = ml_df.select_dtypes(include=['object']).columns.tolist()
@@ -57,13 +79,74 @@ rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
 y_prob_rf = rf.predict_proba(X_test)[:, 1]
 
-cm_rf = confusion_matrix(y_test, y_pred_rf)
-tn, fp, fn, tp = cm_rf.ravel()
+# Plot 1: Full-Color Tenure & Contract Churn Distribution
+plt.figure(figsize=(9, 4.4))
+sns.set_theme(style="whitegrid")
+contract_churn = df.groupby('Contract')['ChurnBinary'].mean().reset_index()
+contract_churn['ChurnRate'] = contract_churn['ChurnBinary'] * 100
 
+bars = plt.bar(contract_churn['Contract'], contract_churn['ChurnRate'], color=['#EF4444', '#F59E0B', '#10B981'], edgecolor='#1E293B', linewidth=1.2, width=0.55)
+plt.title("Customer Attrition Rate by Contractual Commitment Type", fontsize=12.5, weight='bold', pad=12, color='#1E293B')
+plt.ylabel("Attrition / Churn Rate (%)", fontsize=10.5, color='#1E293B')
+plt.xlabel("Contract Commitment Term", fontsize=10.5, color='#1E293B')
+plt.grid(axis='y', linestyle='--', alpha=0.6)
+for bar in bars:
+    height = bar.get_height()
+    plt.annotate(f"{height:.1f}%",
+                 xy=(bar.get_x() + bar.get_width() / 2, height),
+                 xytext=(0, 4), textcoords="offset points",
+                 ha='center', va='bottom', fontsize=10.5, weight='bold', color='#1E293B')
+plt.ylim(0, 52)
+plt.tight_layout()
+plt.savefig(os.path.join(SCREENSHOTS_DIR, "tenure_churn_distribution.png"), dpi=250)
+plt.close()
+
+# Plot 2: Full-Color Confusion Matrix & ROC Curve
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.4))
+
+cm = confusion_matrix(y_test, y_pred_rf)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False, ax=ax1,
+            xticklabels=['Retained (0)', 'Churned (1)'],
+            yticklabels=['Retained (0)', 'Churned (1)'],
+            linewidths=1.2, linecolor='#CBD5E1')
+ax1.set_title("Random Forest Confusion Matrix", fontsize=11.5, weight='bold', color='#1E293B')
+ax1.set_ylabel("True Ground Truth Label", fontsize=10)
+ax1.set_xlabel("Predicted Model Classification", fontsize=10)
+
+fpr_rf, tpr_rf, _ = roc_curve(y_test, y_prob_rf)
+auc_rf = roc_auc_score(y_test, y_prob_rf)
+fpr_lr, tpr_lr, _ = roc_curve(y_test, y_prob_lr)
+auc_lr = roc_auc_score(y_test, y_prob_lr)
+
+ax2.plot(fpr_rf, tpr_rf, color='#2563EB', lw=2.2, label=f'Random Forest (AUC = {auc_rf:.3f})')
+ax2.plot(fpr_lr, tpr_lr, color='#10B981', lw=2.0, linestyle='--', label=f'Logistic Regression (AUC = {auc_lr:.3f})')
+ax2.plot([0, 1], [0, 1], color='#94A3B8', linestyle=':', lw=1.2, label='Random Chance (AUC = 0.500)')
+ax2.set_title("Receiver Operating Characteristic (ROC)", fontsize=11.5, weight='bold', color='#1E293B')
+ax2.set_xlabel("False Positive Rate", fontsize=10)
+ax2.set_ylabel("True Positive Rate (Recall)", fontsize=10)
+ax2.grid(True, linestyle='--', alpha=0.6)
+ax2.legend(loc="lower right", fontsize=9.5)
+
+plt.tight_layout()
+plt.savefig(os.path.join(SCREENSHOTS_DIR, "ml_evaluation_metrics.png"), dpi=250)
+plt.close()
+
+# Plot 3: Full-Color Feature Importance
 feat_importances = pd.Series(rf.feature_importances_, index=X.columns).sort_values(ascending=False).head(10)
+plt.figure(figsize=(9, 4.4))
+bars = plt.barh(feat_importances.sort_values().index, feat_importances.sort_values().values, color='#3B82F6', edgecolor='#1D4ED8', linewidth=1)
+plt.title("Top 10 Churn Predictors (Random Forest Gini Importance)", fontsize=12.5, weight='bold', pad=12, color='#1E293B')
+plt.xlabel("Relative Feature Importance Score", fontsize=10.5, color='#1E293B')
+plt.grid(axis='x', linestyle='--', alpha=0.6)
+plt.tight_layout()
+plt.savefig(os.path.join(SCREENSHOTS_DIR, "feature_importance.png"), dpi=250)
+plt.close()
+
+print("Original full-color figures generated successfully!")
+
 
 # --------------------------------------------------------------------------------------------------
-# ReportLab Canvas & Styling (Times New Roman, Justified text, Black & White tables, Images included)
+# 3. ReportLab Canvas & Styling (Times New Roman, Justified Text, B&W Tables, Original Color Images)
 # --------------------------------------------------------------------------------------------------
 
 class AcademicNumberedCanvas(canvas.Canvas):
@@ -374,7 +457,7 @@ story.append(t_audit)
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 3: ENTERPRISE KPIS & DETAILED EMPIRICAL BREAKDOWNS + CHART
+# SECTION 3: ENTERPRISE KPIS & DETAILED EMPIRICAL BREAKDOWNS + COLOR CHART
 # --------------------------------------------------------------------------------------------------
 story.append(Paragraph("3. Enterprise Key Performance Indicators & Empirical Trends", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
@@ -408,7 +491,7 @@ story.append(Paragraph(
     body_justified
 ))
 
-# Figure 3.1: Contract Churn Distribution Chart
+# Figure 3.1: Contract Churn Distribution Chart in Original Color
 tenure_img_path = os.path.join(SCREENSHOTS_DIR, "tenure_churn_distribution.png")
 if os.path.exists(tenure_img_path):
     story.append(Image(tenure_img_path, width=470, height=205))
@@ -438,7 +521,7 @@ story.append(t_tenure)
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 4: MACHINE LEARNING MODEL ARCHITECTURE & EVALUATION + CHARTS
+# SECTION 4: MACHINE LEARNING MODEL ARCHITECTURE & EVALUATION + COLOR CHARTS
 # --------------------------------------------------------------------------------------------------
 story.append(Paragraph("4. Predictive Machine Learning Architecture & Evaluation", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
@@ -470,13 +553,13 @@ t_ml.setStyle(TableStyle([
 story.append(t_ml)
 story.append(Spacer(1, 8))
 
-# Figure 4.1: Confusion Matrix & ROC Curve Chart
+# Figure 4.1: Confusion Matrix & ROC Curve Chart in Full Color
 ml_img_path = os.path.join(SCREENSHOTS_DIR, "ml_evaluation_metrics.png")
 if os.path.exists(ml_img_path):
     story.append(Image(ml_img_path, width=470, height=195))
     story.append(Paragraph("Figure 4.1: Random Forest Confusion Matrix (left) and Comparative ROC Curves (right)", fig_caption_style))
 
-# Figure 4.2: Feature Importance Chart
+# Figure 4.2: Feature Importance Chart in Full Color
 feat_img_path = os.path.join(SCREENSHOTS_DIR, "feature_importance.png")
 if os.path.exists(feat_img_path):
     story.append(Image(feat_img_path, width=470, height=195))
@@ -485,13 +568,13 @@ if os.path.exists(feat_img_path):
 story.append(PageBreak())
 
 # --------------------------------------------------------------------------------------------------
-# SECTION 5: PLATFORM ARCHITECTURE & UI WALKTHROUGH + SCREENSHOTS
+# SECTION 5: PLATFORM ARCHITECTURE & UI WALKTHROUGH + ORIGINAL COLOR SCREENSHOTS
 # --------------------------------------------------------------------------------------------------
 story.append(Paragraph("5. Interactive Web Dashboard Architecture & UI Walkthrough", h1_style))
 story.append(HRFlowable(width="100%", thickness=1, color=colors.black, spaceAfter=8, spaceBefore=2))
 
 story.append(Paragraph(
-    "The software implementation strictly satisfies the **Single-Code-File Requirement** (Section 21) within `project.py` (926 lines of production Python code). Below are actual visual captures of the deployed interactive Streamlit interface:",
+    "The software implementation strictly satisfies the **Single-Code-File Requirement** (Section 21) within `project.py` (926 lines of production Python code). Below are actual visual captures in full color from the deployed interactive Streamlit interface:",
     body_justified
 ))
 
@@ -678,4 +761,4 @@ story.append(t_sign)
 
 # Build document
 doc.build(story, canvasmaker=AcademicNumberedCanvas)
-print("Complete Academic Project_Report.pdf with Images, Times-Roman, Justified text, and B&W tables generated successfully!")
+print("Project_Report.pdf with original vibrant color images and black & white text/tables generated successfully!")
